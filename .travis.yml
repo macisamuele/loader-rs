@@ -1,0 +1,70 @@
+language: rust
+
+env:
+  global:
+  - RUST_BACKTRACE=full
+  - KCOV_DIR=${HOME}/.cache/tools/kcov
+  - CODECOV_DIR=${HOME}/.cache/tools/codecov
+
+matrix:
+  include:
+  # TODO: add osx and windows testing environments
+  - os: linux
+    dist: xenial
+    rust: nightly
+    env: MAKE_TARGET=coverage
+    addons:
+      apt:
+        packages:
+        - libcurl4-openssl-dev
+        - libelf-dev
+        - libdw-dev
+        - binutils-dev
+        - libiberty-dev
+        - g++
+  - os: linux
+    dist: xenial
+    env: MAKE_TARGET=test
+    rust: stable
+  - os: linux
+    dist: xenial
+    env: MAKE_TARGET=doc
+    rust: stable
+  - os: linux
+    dist: xenial
+    env: MAKE_TARGET=lint
+    rust: stable
+  allow_failures:
+  - env: MAKE_TARGET=lint
+
+install:
+- bash scripts/travis/install.sh
+
+before_script:
+- bash scripts/travis/before_script.sh
+
+script:
+- make "${MAKE_TARGET}"
+
+cache:
+  timeout: 3600
+  directories:
+  - ${HOME}/.cache/pre-commit
+  - ${KCOV_DIR}
+  - ${CODECOV_DIR}
+  - ${HOME}/.cargo/
+  - ${TRAVIS_BUILD_DIR}/target
+
+# notifications:
+#   email: false
+#   slack:
+#     # Personal Slack notification
+#     secure: Something not set yet
+
+deploy:
+  provider: cargo
+  token:
+    secure: imK0awH2BXPuMj7fqFarsEhmu/BYjJvVnGQASMw5CCRuLwajti/waluW2JXYLl81NyaBsHOJZKSeBcWBM7v5Oc3bzrpTo5XuCZaHJxdTWsbv15l7ZQ866JngpoOi/rkhX7RqR6dlhvesGnazWN/sULZoztfNLZzYFKVdJepAHQuCArLXrqP3954ajzb5GQc4/B/yF5vk86CTl2iKw0rl72BL0iPex8NZmNovxgWsY8C7D3yFaqNLP+13PgLNiX6DSA4hD4i3bTeAu9hDldKGikb98oQTQWVQTnORCPheXxmgVYi/lIWAoS1RvV+fKBrhf/NU8XUUPP0yOP3H4lZc9TFt6ERhh1UfedZwbPPDOIgKc6zOZmPC6yuKPWBeDW83BSyWv+lbRX5/faOjMaGN1G7xFCXu/ZiqkOvlODvXkBl5MYkpAGFbEcSnAn3qCxzplnNVOmk2q0W/qzHQ+D87MmoePlnvQn88gNS2vLsfU7y275ztpSNLl7NiXsJColOVlwdeFQIX8KcVIxnjkSGGLXoueBLpnzLFYiPqNB/qvYZuL/rw3O29/JvobRLMRNDKNsYQTqo31SmsD+45Sj5MsbOPctjKV3N/jVwuc+cuYi/Tysn3fz+MeltfOIdLh6RIJGI2tsPGpcBWpOZtrX6Uo0Li7bVueOjDppglgcjxyQs=
+  on:
+    condition: ${TRAVIS_REPO_SLUG} = macisamuele/loader-rs && ${MAKE_TARGET} = test && $(bash scripts/cargo-version.sh) = ${TRAVIS_TAG}
+    tags: true

@@ -1,0 +1,27 @@
+[package]
+authors = ["Samuele Maci <macisamuele@gmail.com>"]
+description = "Rust interface to load generic objects from an URI"
+repository = "https://github.com/macisamuele/loader-rs"
+edition = "2018"
+keywords = ["json"]
+license = "MIT"
+name = "loader-rs"
+readme = "README.md"
+publish = true
+version = "0.0.0"
+
+[badges]
+codecov = { repository = "macisamuele/loader-rs", branch = "master", service = "github" }
+is-it-maintained-issue-resolution = { repository = "macisamuele/loader-rs" }
+is-it-maintained-open-issues = { repository = "macisamuele/loader-rs" }
+maintenance = { status = "actively-developed" }
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = []
+
+[dev-dependencies]
+
+[dependencies]
