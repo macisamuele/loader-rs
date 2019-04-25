@@ -4,6 +4,9 @@ use regex::Regex;
 use std::cell::RefCell;
 use url::{ParseError, SyntaxViolation, Url};
 
+#[cfg(test)]
+use std::path::Path;
+
 #[derive(Clone, Debug, Display, Fail, PartialEq)]
 pub enum UrlError {
     ParseError(ParseError),
@@ -97,49 +100,33 @@ pub(crate) fn normalize_url_for_cache(url: &Url) -> Url {
     clone_url
 }
 
-pub(crate) fn extract_fragment_components_from_fragment_string<R: AsRef<str>>(fragment_string: R) -> Vec<String> {
-    let fragments: Vec<String> = fragment_string
-        .as_ref()
-        .split('/')
-        .skip(1)
-        .map(|fragment_part| fragment_part.replace("~1", "/").replace("~0", "~"))
-        .collect();
-
-    if fragments.len() == 1 && fragments[0] == "" {
-        vec![]
-    } else {
-        fragments
-    }
-}
-
-#[inline]
-pub(crate) fn extract_fragment_components(url: &Url) -> Vec<String> {
-    extract_fragment_components_from_fragment_string(url.fragment().unwrap_or("/"))
-}
-
-pub(crate) fn append_fragment_components<T: AsRef<str>, I: IntoIterator<Item = T>>(url: &Url, fragment_components: I) -> Url {
-    let mut components = vec![String::from("")];
-    components.extend(extract_fragment_components(url));
-    components.extend(fragment_components.into_iter().map(|item| item.as_ref().to_string()));
-
-    let mut cloned_url = url.clone();
-    cloned_url.set_fragment(Some(
-        components
-            .iter()
-            .map(|fragment_part| fragment_part.replace("~", "~0").replace("/", "~1"))
+#[allow(dead_code)]
+#[cfg(test)]
+pub(crate) fn test_data_file_path(path: &str) -> String {
+    let repository_path = Path::new(file!()).canonicalize().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
+    String::from(
+        path.split('/')
             .collect::<Vec<_>>()
-            .join("/")
-            .as_str(),
-    ));
-    cloned_url
+            .iter()
+            .fold(repository_path.join("test-data"), |iter_path, &path_path| iter_path.join(path_path))
+            .canonicalize()
+            .unwrap()
+            .to_str()
+            .unwrap(),
+    )
+}
+
+#[allow(dead_code)]
+#[cfg(test)]
+pub(crate) fn test_data_file_url(path: &str) -> String {
+    Url::from_file_path(dbg!(test_data_file_path(path))).unwrap().to_string()
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        append_fragment_components, extract_fragment_components, extract_fragment_components_from_fragment_string, parse_and_normalize_url, ParseError, SyntaxViolation, UrlError,
-    };
+    use super::{parse_and_normalize_url, UrlError};
     use test_case_derive::test_case;
+    use url::{ParseError, SyntaxViolation};
 
     #[test_case("memory://", "memory:///#/" :: "url_with_no_path_no_fragment")]
     #[test_case("memory://#", "memory:///#/" :: "url_with_no_path")]
@@ -163,39 +150,38 @@ mod tests {
     fn test_parse_and_normalize_url_invalid_case(url_str: &str, expected_err: UrlError) {
         assert_eq!(parse_and_normalize_url(url_str).unwrap_err(), expected_err);
     }
-
-    #[allow(clippy::redundant_closure)]
-    #[test_case("", vec![] :: "empty fragment")]
-    #[test_case("#", vec![] :: "Only pound in fragment")]
-    #[test_case("/", vec![] :: "Only slash in fragment")]
-    #[test_case("#/", vec![] :: "Pound and slash in fragment")]
-    #[test_case("/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment not starting with pound")]
-    #[test_case("#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment starting with pound")]
-    fn test_extract_fragment_components_from_fragment_string(url_str: &str, expected_result: Vec<&str>) {
-        assert_eq!(
-            extract_fragment_components_from_fragment_string(url_str),
-            expected_result.iter().map(|part: &&str| part.to_string()).collect::<Vec<String>>()
-        );
-    }
-
-    #[allow(clippy::redundant_closure)]
-    #[test_case("memory://", vec![] :: "Bare minimal url")]
-    #[test_case("memory://#/", vec![] :: "Minimal url with fragment")]
-    #[test_case("memory://#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment")]
-    fn test_extract_fragment_components(url_str: &str, expected_result: Vec<&str>) {
-        assert_eq!(
-            extract_fragment_components(&parse_and_normalize_url(url_str).ok().unwrap()),
-            expected_result.iter().map(|part: &&str| part.to_string()).collect::<Vec<String>>()
-        );
-    }
-
-    #[test_case("memory://", vec![], "memory:///#")]
-    #[test_case("memory://", vec!["a"], "memory:///#/a")]
-    #[test_case("memory://#/a/b", vec!["c"], "memory:///#/a/b/c")]
-    fn test_append_fragment_components(url_str: &str, components_to_add: Vec<&str>, expected_result: &str) {
-        assert_eq!(
-            append_fragment_components(&parse_and_normalize_url(url_str).ok().unwrap(), components_to_add).as_str(),
-            expected_result,
-        );
-    }
+    //    #[allow(clippy::redundant_closure)]
+    //    #[test_case("", vec![] :: "empty fragment")]
+    //    #[test_case("#", vec![] :: "Only pound in fragment")]
+    //    #[test_case("/", vec![] :: "Only slash in fragment")]
+    //    #[test_case("#/", vec![] :: "Pound and slash in fragment")]
+    //    #[test_case("/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment not starting with pound")]
+    //    #[test_case("#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment starting with pound")]
+    //    fn test_extract_fragment_components_from_fragment_string(url_str: &str, expected_result: Vec<&str>) {
+    //        assert_eq!(
+    //            extract_fragment_components_from_fragment_string(url_str),
+    //            expected_result.iter().map(|part: &&str| part.to_string()).collect::<Vec<String>>()
+    //        );
+    //    }
+    //
+    //    #[allow(clippy::redundant_closure)]
+    //    #[test_case("memory://", vec![] :: "Bare minimal url")]
+    //    #[test_case("memory://#/", vec![] :: "Minimal url with fragment")]
+    //    #[test_case("memory://#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment")]
+    //    fn test_extract_fragment_components(url_str: &str, expected_result: Vec<&str>) {
+    //        assert_eq!(
+    //            extract_fragment_components(&parse_and_normalize_url(url_str).ok().unwrap()),
+    //            expected_result.iter().map(|part: &&str| part.to_string()).collect::<Vec<String>>()
+    //        );
+    //    }
+    //
+    //    #[test_case("memory://", vec![], "memory:///#")]
+    //    #[test_case("memory://", vec!["a"], "memory:///#/a")]
+    //    #[test_case("memory://#/a/b", vec!["c"], "memory:///#/a/b/c")]
+    //    fn test_append_fragment_components(url_str: &str, components_to_add: Vec<&str>, expected_result: &str) {
+    //        assert_eq!(
+    //            append_fragment_components(&parse_and_normalize_url(url_str).ok().unwrap(), components_to_add).as_str(),
+    //            expected_result,
+    //        );
+    //    }
 }
