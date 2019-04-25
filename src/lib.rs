@@ -43,6 +43,9 @@
 
 #[macro_use]
 extern crate strum_macros;
+#[cfg(test)]
+#[macro_use]
+extern crate serde_json;
 
 use crate::{
     cache::{Cache, Cached},
@@ -58,7 +61,10 @@ use url::Url;
 mod macros;
 
 pub mod cache;
+pub mod traits;
 pub mod url_helpers;
+
+pub use traits::loaders;
 
 #[derive(Debug, Display, Fail)]
 pub enum LoaderError<FE>
