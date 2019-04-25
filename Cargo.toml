@@ -21,7 +21,14 @@ all-features = true
 
 [features]
 default = []
+regular_expression = ["regex"]
 
 [dev-dependencies]
+test-case-derive = "0"
 
 [dependencies]
+failure = "0"
+regex = { version = "1", optional = true }
+strum = "0"
+strum_macros = "0"
+url = "1"

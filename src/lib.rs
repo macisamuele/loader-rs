@@ -41,5 +41,10 @@
 // Ignore missing_const_for_fn clippy linter (it's too noisy in regards const fn in traits)
 #![allow(clippy::missing_const_for_fn)]
 
+#[macro_use]
+extern crate strum_macros;
+
 #[allow(dead_code)] // TODO: remove it once it is in use
 pub mod cache;
+#[allow(dead_code)] // TODO: remove it once it is in use
+pub mod url_helpers;
