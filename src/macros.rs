@@ -36,6 +36,19 @@ macro_rules! mock_loader_request {
     }};
 }
 
+#[cfg(any(test, feature = "trait_json"))]
+#[macro_export]
+macro_rules! rust_json {
+    ($($json:tt)+) => {{
+        use serde_json;
+        use json;
+        let thing: json::JsonValue = json::parse(
+            serde_json::to_string(&json![$($json)+]).unwrap().as_str(),
+        ).unwrap();
+        thing
+    }};
+}
+
 #[cfg(any(test, feature = "trait_serde_yaml"))]
 #[macro_export]
 macro_rules! yaml {
