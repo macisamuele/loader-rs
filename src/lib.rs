@@ -1,4 +1,4 @@
-#![deny(
+#![allow(
     unreachable_pub,
     anonymous_parameters,
     bad_style,
@@ -52,6 +52,10 @@ use crate::{
 use failure::Fail;
 use std::{fmt::Debug, fs::read_to_string, io, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
 use url::Url;
+
+#[cfg(test)]
+#[macro_use]
+mod macros;
 
 pub mod cache;
 pub mod url_helpers;
