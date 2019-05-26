@@ -1,6 +1,10 @@
 Changelog
 =========
 
+0.2.0 (2019-05-26)
+------------------
+- Update code-base to deal with `json-trait-rs` update - [PR #1](https://github.com/macisamuele/loader-rs/pull/1)
+
 0.1.0 (2019-04-28)
 ------------------
 - Initial project release
