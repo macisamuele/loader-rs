@@ -24,5 +24,5 @@ pub mod loaders {
     pub type SerdeYamlLoader = Loader<serde_yaml::Value, serde_yaml::Error>;
 
     #[cfg(feature = "trait_testing")]
-    pub type TestingLoader = Loader<json_trait_rs::testing::TestingType, ()>;
+    pub type TestingLoader = Loader<json_trait_rs::TestingType, ()>;
 }

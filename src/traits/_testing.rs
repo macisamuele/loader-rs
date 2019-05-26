@@ -1,5 +1,5 @@
 use crate::{Loader, LoaderError, LoaderTrait};
-use json_trait_rs::testing::TestingType;
+use json_trait_rs::TestingType;
 
 impl From<()> for LoaderError<()> {
     fn from(_: ()) -> Self {
@@ -34,7 +34,7 @@ mod tests {
         url_helpers::{test_data_file_url, UrlError},
         LoaderError, LoaderTrait,
     };
-    use json_trait_rs::testing::TestingType;
+    use json_trait_rs::TestingType;
     use std::io;
     use test_case_derive::test_case;
 
