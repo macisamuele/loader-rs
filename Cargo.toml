@@ -24,7 +24,6 @@ default = []
 trait_json = ["json"]
 trait_serde_json = ["serde_json"]
 trait_serde_yaml = ["serde_yaml"]
-trait_testing = ["json-trait-rs"]
 regular_expression = ["regex"]
 
 [dev-dependencies]
@@ -34,7 +33,7 @@ test-case-derive = "0"
 
 [dependencies]
 failure = "0"
-json-trait-rs = { version = "0", optional = true }
+json-trait-rs = "^0.3"
 json = { version = "0", optional = true }
 regex = { version = "1", optional = true }
 reqwest = "0"
