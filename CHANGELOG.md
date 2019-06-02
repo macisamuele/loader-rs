@@ -1,6 +1,10 @@
 Changelog
 =========
 
+0.3.0 (2019-06-02)
+------------------
+- Update `json-trait-rs` dependency and rename `TestingLoader` into `RustTypeLoader`
+
 0.2.0 (2019-05-26)
 ------------------
 - Update code-base to deal with `json-trait-rs` update - [PR #1](https://github.com/macisamuele/loader-rs/pull/1)
