@@ -144,7 +144,7 @@ mod private {
         LoaderError<FE>: From<FE>,
     {
         fn set<R: AsRef<str>>(&self, url: R, value: T) -> Result<(), LoaderError<FE>>;
-        fn get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>>;
+        fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>>;
     }
 }
 
@@ -190,6 +190,12 @@ where
         };
         Ok(Self::extract_fragment(cached_value, &url))
     }
+
+    // This method is needed to extract internal_get_or_fetch_with_result from the internal trait
+    #[inline(always)]
+    fn get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
+        self.internal_get_or_fetch_with_result(key, fetcher)
+    }
 }
 
 #[derive(Debug)]
@@ -230,7 +236,7 @@ where
     }
 
     #[inline]
-    fn get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
+    fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
         self.cache.get_or_fetch_with_result(key, fetcher)
     }
 }
