@@ -192,7 +192,6 @@ where
     }
 
     // This method is needed to extract internal_get_or_fetch_with_result from the internal trait
-    #[inline(always)]
     fn get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
         self.internal_get_or_fetch_with_result(key, fetcher)
     }
