@@ -22,9 +22,9 @@ all-features = true
 
 [features]
 default = []
-trait_json = ["json"]
-trait_serde_json = ["serde_json"]
-trait_serde_yaml = ["serde_yaml"]
+trait_json = ["json", "json-trait-rs/trait_json"]
+trait_serde_json = ["serde_json", "json-trait-rs/trait_serde_json"]
+trait_serde_yaml = ["serde_yaml", "json-trait-rs/trait_serde_yaml"]
 regular_expression = ["regex"]
 
 [dev-dependencies]
