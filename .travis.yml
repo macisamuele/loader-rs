@@ -13,15 +13,7 @@ matrix:
   - os: linux
     dist: xenial
     env: MAKE_TARGET=coverage
-    addons:
-      apt:
-        packages:
-        - libcurl4-openssl-dev
-        - libelf-dev
-        - libdw-dev
-        - binutils-dev
-        - libiberty-dev
-        - g++
+    rust: nightly
   - os: linux
     dist: xenial
     env: MAKE_TARGET=test
