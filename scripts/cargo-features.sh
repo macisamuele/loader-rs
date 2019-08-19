@@ -5,7 +5,9 @@ if echo "${RUST_TOOLCHAIN:-stable}" | grep --quiet "^nightly" ; then
     features_to_ignore=""
 else
     features_to_ignore="$(grep -v '#' features-enabled-on-nightly-only 2> /dev/null || true)"
-    echo "Ignoring the following features as they are available only on nightly rust: ${features_to_ignore}" > /dev/stderr
+    if [ "${features_to_ignore}" != "" ]; then
+        echo "Ignoring the following features as they are available only on nightly rust: ${features_to_ignore}" > /dev/stderr
+    fi
 fi
 
 cargo metadata --format-version 1 | FEATURES_TO_IGNORE=${features_to_ignore} python -c "$(cat <<EOF
