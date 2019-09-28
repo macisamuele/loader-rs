@@ -1,4 +1,3 @@
-use failure::Fail;
 #[cfg(feature = "regular_expression")]
 use regex::Regex;
 use std::cell::RefCell;
@@ -7,7 +6,7 @@ use url::{ParseError, SyntaxViolation, Url};
 #[cfg(test)]
 use std::path::Path;
 
-#[derive(Clone, Debug, Display, Fail, PartialEq)]
+#[derive(Clone, Debug, Display, PartialEq)]
 pub enum UrlError {
     ParseError(ParseError),
     SyntaxViolation(SyntaxViolation),

@@ -50,7 +50,6 @@ use crate::{
     private::LoaderInternal,
     url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
 };
-use failure::Fail;
 use std::{fmt::Debug, fs::read_to_string, io, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
 use url::Url;
 
@@ -64,7 +63,7 @@ pub mod url_helpers;
 
 pub use traits::loaders;
 
-#[derive(Debug, Display, Fail)]
+#[derive(Debug, Display)]
 pub enum LoaderError<FE>
 where
     FE: 'static + Debug + Sync + Send,
