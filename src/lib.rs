@@ -50,7 +50,7 @@ use crate::{
     private::LoaderInternal,
     url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
 };
-use std::{fmt::Debug, fs::read_to_string, io, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
+use std::{fs::read_to_string, io, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
 use url::Url;
 
 #[cfg(test)]
@@ -66,7 +66,7 @@ pub use traits::loaders;
 #[derive(Debug, Display)]
 pub enum LoaderError<FE>
 where
-    FE: 'static + Debug + Sync + Send,
+    FE: 'static + Sync + Send,
 {
     IOError(io::Error),
     InvalidURL(UrlError),
@@ -77,7 +77,7 @@ where
 
 impl<FE> From<io::Error> for LoaderError<FE>
 where
-    FE: Debug + Sync + Send,
+    FE: Sync + Send,
 {
     fn from(error: io::Error) -> Self {
         LoaderError::IOError(error)
@@ -86,7 +86,7 @@ where
 
 impl<FE> From<url::ParseError> for LoaderError<FE>
 where
-    FE: Debug + Sync + Send,
+    FE: Sync + Send,
 {
     fn from(error: url::ParseError) -> Self {
         LoaderError::InvalidURL(UrlError::ParseError(error))
@@ -95,7 +95,7 @@ where
 
 impl<FE> From<url::SyntaxViolation> for LoaderError<FE>
 where
-    FE: Debug + Sync + Send,
+    FE: Sync + Send,
 {
     fn from(error: url::SyntaxViolation) -> Self {
         LoaderError::InvalidURL(UrlError::SyntaxViolation(error))
@@ -104,7 +104,7 @@ where
 
 impl<FE> From<UrlError> for LoaderError<FE>
 where
-    FE: Debug + Sync + Send,
+    FE: Sync + Send,
 {
     fn from(error: UrlError) -> Self {
         LoaderError::InvalidURL(error)
@@ -113,7 +113,7 @@ where
 
 impl<FE> From<reqwest::Error> for LoaderError<FE>
 where
-    FE: Debug + Sync + Send,
+    FE: Sync + Send,
 {
     fn from(error: reqwest::Error) -> Self {
         LoaderError::FetchURLFailed(error)
@@ -122,7 +122,7 @@ where
 
 impl<FE> Default for LoaderError<FE>
 where
-    FE: Debug + Sync + Send,
+    FE: Sync + Send,
 {
     #[inline]
     fn default() -> Self {
@@ -133,13 +133,12 @@ where
 // Prevent users from implementing the LoaderInternal trait. (Idea extrapolated from libcore/slice/mod.rs)
 mod private {
     use crate::LoaderError;
-    use std::{fmt::Debug, sync::Arc};
+    use std::sync::Arc;
     use url::Url;
 
     pub trait LoaderInternal<T, FE>
     where
-        T: Debug,
-        FE: 'static + Debug + Sync + Send,
+        FE: 'static + Sync + Send,
         LoaderError<FE>: From<FE>,
     {
         fn set<R: AsRef<str>>(&self, url: R, value: T) -> Result<(), LoaderError<FE>>;
@@ -149,8 +148,8 @@ mod private {
 
 pub trait LoaderTrait<T, FE>: Default + Sync + Send + LoaderInternal<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
+    T: Clone,
+    FE: 'static + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn load_from_string(content: String) -> Result<T, LoaderError<FE>>
@@ -199,8 +198,8 @@ where
 #[derive(Debug)]
 pub struct Loader<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
+    T: Clone,
+    FE: 'static + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     cache: Cache<Url, T>,
@@ -209,8 +208,8 @@ where
 
 impl<T, FE> Default for Loader<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
+    T: Clone,
+    FE: 'static + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn default() -> Self {
@@ -223,8 +222,8 @@ where
 
 impl<T, FE> LoaderInternal<T, FE> for Loader<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
+    T: Clone,
+    FE: 'static + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     #[inline]
