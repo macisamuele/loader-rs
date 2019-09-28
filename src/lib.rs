@@ -66,7 +66,7 @@ pub use traits::loaders;
 #[derive(Debug, Display)]
 pub enum LoaderError<FE>
 where
-    FE: 'static + Sync + Send,
+    FE: Sync + Send,
 {
     IOError(io::Error),
     InvalidURL(UrlError),
@@ -138,7 +138,7 @@ mod private {
 
     pub trait LoaderInternal<T, FE>
     where
-        FE: 'static + Sync + Send,
+        FE: Sync + Send,
         LoaderError<FE>: From<FE>,
     {
         fn set<R: AsRef<str>>(&self, url: R, value: T) -> Result<(), LoaderError<FE>>;
@@ -149,7 +149,7 @@ mod private {
 pub trait LoaderTrait<T, FE>: Default + Sync + Send + LoaderInternal<T, FE>
 where
     T: Clone,
-    FE: 'static + Sync + Send,
+    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn load_from_string(content: String) -> Result<T, LoaderError<FE>>
@@ -199,7 +199,7 @@ where
 pub struct Loader<T, FE>
 where
     T: Clone,
-    FE: 'static + Sync + Send,
+    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     cache: Cache<Url, T>,
@@ -209,7 +209,7 @@ where
 impl<T, FE> Default for Loader<T, FE>
 where
     T: Clone,
-    FE: 'static + Sync + Send,
+    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn default() -> Self {
@@ -223,7 +223,7 @@ where
 impl<T, FE> LoaderInternal<T, FE> for Loader<T, FE>
 where
     T: Clone,
-    FE: 'static + Sync + Send,
+    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     #[inline]
