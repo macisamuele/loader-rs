@@ -30,6 +30,7 @@ where
 pub trait Cached<K, V>
 where
     K: Eq + Hash,
+    Self: Sync + Send,
 {
     fn get(&self, key: &K) -> Option<Arc<V>>;
 

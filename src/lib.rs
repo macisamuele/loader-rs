@@ -64,10 +64,7 @@ pub mod url_helpers;
 pub use traits::loaders;
 
 #[derive(Debug, Display)]
-pub enum LoaderError<FE>
-where
-    FE: Sync + Send,
-{
+pub enum LoaderError<FE> {
     IOError(io::Error),
     InvalidURL(UrlError),
     FetchURLFailed(reqwest::Error),
@@ -75,55 +72,37 @@ where
     UnknownError,
 }
 
-impl<FE> From<io::Error> for LoaderError<FE>
-where
-    FE: Sync + Send,
-{
+impl<FE> From<io::Error> for LoaderError<FE> {
     fn from(error: io::Error) -> Self {
         LoaderError::IOError(error)
     }
 }
 
-impl<FE> From<url::ParseError> for LoaderError<FE>
-where
-    FE: Sync + Send,
-{
+impl<FE> From<url::ParseError> for LoaderError<FE> {
     fn from(error: url::ParseError) -> Self {
         LoaderError::InvalidURL(UrlError::ParseError(error))
     }
 }
 
-impl<FE> From<url::SyntaxViolation> for LoaderError<FE>
-where
-    FE: Sync + Send,
-{
+impl<FE> From<url::SyntaxViolation> for LoaderError<FE> {
     fn from(error: url::SyntaxViolation) -> Self {
         LoaderError::InvalidURL(UrlError::SyntaxViolation(error))
     }
 }
 
-impl<FE> From<UrlError> for LoaderError<FE>
-where
-    FE: Sync + Send,
-{
+impl<FE> From<UrlError> for LoaderError<FE> {
     fn from(error: UrlError) -> Self {
         LoaderError::InvalidURL(error)
     }
 }
 
-impl<FE> From<reqwest::Error> for LoaderError<FE>
-where
-    FE: Sync + Send,
-{
+impl<FE> From<reqwest::Error> for LoaderError<FE> {
     fn from(error: reqwest::Error) -> Self {
         LoaderError::FetchURLFailed(error)
     }
 }
 
-impl<FE> Default for LoaderError<FE>
-where
-    FE: Sync + Send,
-{
+impl<FE> Default for LoaderError<FE> {
     #[inline]
     fn default() -> Self {
         LoaderError::UnknownError
@@ -138,7 +117,6 @@ mod private {
 
     pub trait LoaderInternal<T, FE>
     where
-        FE: Sync + Send,
         LoaderError<FE>: From<FE>,
     {
         fn set<R: AsRef<str>>(&self, url: R, value: T) -> Result<(), LoaderError<FE>>;
@@ -146,9 +124,8 @@ mod private {
     }
 }
 
-pub trait LoaderTrait<T, FE>: Default + Sync + Send + LoaderInternal<T, FE>
+pub trait LoaderTrait<T, FE>: Default + LoaderInternal<T, FE>
 where
-    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn load_from_string(content: String) -> Result<T, LoaderError<FE>>
@@ -183,7 +160,6 @@ where
 #[derive(Debug)]
 pub struct Loader<T, FE>
 where
-    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     cache: Cache<Url, T>,
@@ -192,7 +168,6 @@ where
 
 impl<T, FE> Default for Loader<T, FE>
 where
-    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn default() -> Self {
@@ -205,7 +180,6 @@ where
 
 impl<T, FE> LoaderInternal<T, FE> for Loader<T, FE>
 where
-    FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     #[inline]
