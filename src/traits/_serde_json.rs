@@ -8,11 +8,11 @@ impl From<serde_json::Error> for LoaderError<serde_json::Error> {
 }
 
 impl LoaderTrait<serde_json::Value, serde_json::Error> for Loader<serde_json::Value, serde_json::Error> {
-    fn load_from_string(content: String) -> Result<serde_json::Value, LoaderError<serde_json::Error>>
+    fn load_from_bytes(content: &[u8]) -> Result<serde_json::Value, LoaderError<serde_json::Error>>
     where
         Self: Sized,
     {
-        serde_json::from_str(&content).or_else(|serde_error| Err(serde_error)?)
+        serde_json::from_slice(content).or_else(|serde_error| Err(serde_error)?)
     }
 }
 

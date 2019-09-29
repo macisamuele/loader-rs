@@ -8,11 +8,21 @@ impl From<json::Error> for LoaderError<json::Error> {
 }
 
 impl LoaderTrait<json::JsonValue, json::Error> for Loader<json::JsonValue, json::Error> {
-    fn load_from_string(content: String) -> Result<json::JsonValue, LoaderError<json::Error>>
+    fn load_from_string(content: &str) -> Result<json::JsonValue, LoaderError<json::Error>>
     where
         Self: Sized,
     {
-        json::parse(&content).or_else(|json_error| Err(json_error)?)
+        json::parse(content).or_else(|json_error| Err(json_error)?)
+    }
+
+    fn load_from_bytes(content: &[u8]) -> Result<json::JsonValue, LoaderError<json::Error>>
+    where
+        Self: Sized,
+    {
+        match std::str::from_utf8(content) {
+            Ok(string_value) => Self::load_from_string(string_value),
+            Err(_) => Err(json::Error::FailedUtf8Parsing)?,
+        }
     }
 }
 
