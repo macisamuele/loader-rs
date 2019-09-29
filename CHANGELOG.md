@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.4.0 (2019-09-30)
+------------------
+- `LoaderTrait` traits cleanup (remove not needed Sync, Send, Clone, Debug, etc.) - [PR #5](https://github.com/macisamuele/loader-rs/pull/5)
+- Update `LoaderTrait` to support loading via bytes instead of string - [PR #6](https://github.com/macisamuele/loader-rs/pull/6)
+
 0.3.0 (2019-06-02)
 ------------------
 - Update `json-trait-rs` dependency and rename `TestingLoader` into `RustTypeLoader`
