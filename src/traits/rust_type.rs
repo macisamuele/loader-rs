@@ -35,7 +35,7 @@ mod tests {
         LoaderError, LoaderTrait,
     };
     use json_trait_rs::RustType;
-    use std::io;
+    use std::{io, sync::Arc};
     use test_case_derive::test_case;
 
     #[test]
@@ -81,7 +81,7 @@ mod tests {
     #[test_case("testing/String.txt", RustType::from("Some Text"))]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: RustType) {
         let loader = RustTypeLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), expected_loaded_object);
+        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
@@ -100,7 +100,7 @@ mod tests {
     #[test_case("testing/String.txt", RustType::from("Some Text"))]
     fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: RustType) {
         let loader = RustTypeLoader::default();
-        assert_eq!(mock_loader_request!(loader, file_path).unwrap(), expected_loaded_object);
+        assert_eq!(mock_loader_request!(loader, file_path).unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]

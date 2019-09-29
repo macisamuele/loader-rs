@@ -51,38 +51,19 @@ where
         self.set_from_arc(key, Arc::new(value))
     }
 
-    fn get_or_fetch_with_result<E, F: FnOnce(&K) -> Result<V, E>>(&self, key: &K, fetcher: F) -> Result<Arc<V>, E>
-    where
-        K: Clone,
-        V: Clone,
-    {
-        if let Some(t) = self.get(key) {
+    fn get_or_fetch_with_result<E, F: FnOnce(&K) -> Result<V, E>>(&self, key: K, fetcher: F) -> Result<Arc<V>, E> {
+        if let Some(t) = self.get(&key) {
             Ok(t)
         } else {
-            let value = Arc::new(fetcher(key)?);
-            self.set_from_arc(key.clone(), Arc::clone(&value));
+            let value = Arc::new(fetcher(&key)?);
+            self.set_from_arc(key, Arc::clone(&value));
             Ok(value)
         }
     }
 
-    fn get_or_fetch<F: Fn(&K) -> V>(&self, key: &K, fetcher: F) -> Arc<V>
-    where
-        K: Clone,
-        V: Clone,
-    {
+    fn get_or_fetch<F: Fn(&K) -> V>(&self, key: K, fetcher: F) -> Arc<V> {
         let result: Result<Arc<V>, ()> = self.get_or_fetch_with_result(key, |key_to_fetch| Ok(fetcher(key_to_fetch)));
         result.ok().unwrap()
-    }
-}
-
-impl<K, V> Clone for Cache<K, V>
-where
-    K: Clone + Eq + Hash,
-    V: Clone + PartialEq,
-{
-    #[inline]
-    fn clone(&self) -> Self {
-        Self(self.0.clone())
     }
 }
 
@@ -178,12 +159,12 @@ mod tests {
 
         assert_eq!(cache.get(&5), None);
         assert_eq!(cache.stats(), Stats { hits: 2, misses: 4 });
-        assert_eq!(cache.get_or_fetch(&5, |k| k * k), Arc::new(25));
+        assert_eq!(cache.get_or_fetch(5, |k| k * k), Arc::new(25));
         assert_eq!(cache.stats(), Stats { hits: 2, misses: 5 });
-        assert_eq!(cache.get_or_fetch(&5, |_| 0), Arc::new(25));
+        assert_eq!(cache.get_or_fetch(5, |_| 0), Arc::new(25));
         assert_eq!(cache.stats(), Stats { hits: 3, misses: 5 });
 
-        if let Err(val) = cache.get_or_fetch_with_result(&42, |&k| Err(k)) {
+        if let Err(val) = cache.get_or_fetch_with_result(42, |&k| Err(k)) {
             assert_eq!(val, 42);
         } else {
             panic!("An error was expected during get_or_fetch_with_result call");

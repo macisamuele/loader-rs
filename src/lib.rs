@@ -148,7 +148,6 @@ mod private {
 
 pub trait LoaderTrait<T, FE>: Default + Sync + Send + LoaderInternal<T, FE>
 where
-    T: Clone,
     FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
@@ -156,37 +155,23 @@ where
     where
         Self: Sized;
 
-    fn load<R: AsRef<str>>(&self, url: R) -> Result<T, LoaderError<FE>> {
+    fn load<R: AsRef<str>>(&self, url: R) -> Result<Arc<T>, LoaderError<FE>> {
         self.load_with_timeout(url, Duration::from_millis(30_000))
     }
 
-    #[allow(unused_variables)]
-    fn extract_fragment(value: Arc<T>, url: &Url) -> T
-    where
-        Self: Sized,
-    {
-        value.deref().clone()
-    }
-
-    fn load_with_timeout<R: AsRef<str>>(&self, url: R, timeout: Duration) -> Result<T, LoaderError<FE>> {
+    fn load_with_timeout<R: AsRef<str>>(&self, url: R, timeout: Duration) -> Result<Arc<T>, LoaderError<FE>> {
         let url = parse_and_normalize_url(url)?;
 
-        let normalized_url = normalize_url_for_cache(&url);
-
-        let cached_value = {
-            let thing: Result<Arc<T>, LoaderError<FE>> = self.get_or_fetch_with_result(&normalized_url, |url_to_fetch| {
-                // Value was not available on cache
-                Ok(Self::load_from_string(if url_to_fetch.scheme() == "file" {
-                    read_to_string(url_to_fetch.to_file_path().unwrap())?
-                } else {
-                    let client_builder = reqwest::Client::builder();
-                    let client = client_builder.gzip(true).timeout(timeout).build()?;
-                    client.get(url_to_fetch.as_ref()).send()?.error_for_status()?.text()?
-                })?)
-            });
-            thing?
-        };
-        Ok(Self::extract_fragment(cached_value, &url))
+        Ok(self.get_or_fetch_with_result(&normalize_url_for_cache(&url), |url_to_fetch| {
+            // Value was not available on cache
+            Ok(Self::load_from_string(if url_to_fetch.scheme() == "file" {
+                read_to_string(url_to_fetch.to_file_path().unwrap())?
+            } else {
+                let client_builder = reqwest::Client::builder();
+                let client = client_builder.gzip(true).timeout(timeout).build()?;
+                client.get(url_to_fetch.as_ref()).send()?.error_for_status()?.text()?
+            })?)
+        })?)
     }
 
     // This method is needed to extract internal_get_or_fetch_with_result from the internal trait
@@ -198,7 +183,6 @@ where
 #[derive(Debug)]
 pub struct Loader<T, FE>
 where
-    T: Clone,
     FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
@@ -208,7 +192,6 @@ where
 
 impl<T, FE> Default for Loader<T, FE>
 where
-    T: Clone,
     FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
@@ -222,7 +205,6 @@ where
 
 impl<T, FE> LoaderInternal<T, FE> for Loader<T, FE>
 where
-    T: Clone,
     FE: Sync + Send,
     LoaderError<FE>: From<FE>,
 {
@@ -234,7 +216,7 @@ where
 
     #[inline]
     fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
-        self.cache.get_or_fetch_with_result(key, fetcher)
+        self.cache.get_or_fetch_with_result(key.clone(), fetcher)
     }
 }
 
