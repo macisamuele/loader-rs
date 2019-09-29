@@ -8,11 +8,11 @@ impl From<serde_yaml::Error> for LoaderError<serde_yaml::Error> {
 }
 
 impl LoaderTrait<serde_yaml::Value, serde_yaml::Error> for Loader<serde_yaml::Value, serde_yaml::Error> {
-    fn load_from_string(content: String) -> Result<serde_yaml::Value, LoaderError<serde_yaml::Error>>
+    fn load_from_bytes(content: &[u8]) -> Result<serde_yaml::Value, LoaderError<serde_yaml::Error>>
     where
         Self: Sized,
     {
-        serde_yaml::from_str(&content).or_else(|serde_error| Err(serde_error)?)
+        serde_yaml::from_slice(content).or_else(|serde_error| Err(serde_error)?)
     }
 }
 

@@ -8,21 +8,22 @@ impl From<()> for LoaderError<()> {
 }
 
 impl LoaderTrait<RustType, ()> for Loader<RustType, ()> {
-    fn load_from_string(content: String) -> Result<RustType, LoaderError<()>>
+    fn load_from_bytes(content: &[u8]) -> Result<RustType, LoaderError<()>>
     where
         Self: Sized,
     {
-        let content = content.trim();
-        if content.is_empty() {
+        let tm = String::from_utf8_lossy(content);
+        let string_content = tm.trim();
+        if string_content.is_empty() {
             Ok(RustType::Null)
-        } else if "ERR" == content {
+        } else if "ERR" == string_content {
             Err(())?
-        } else if let Ok(value) = content.parse::<i32>() {
+        } else if let Ok(value) = string_content.parse::<i32>() {
             Ok(RustType::from(value))
-        } else if let Ok(value) = content.parse::<bool>() {
+        } else if let Ok(value) = string_content.parse::<bool>() {
             Ok(RustType::from(value))
         } else {
-            Ok(RustType::from(content))
+            Ok(RustType::from(string_content))
         }
     }
 }

@@ -61,6 +61,7 @@ pub mod cache;
 pub mod traits;
 pub mod url_helpers;
 
+use std::{fs::read, io::Read};
 pub use traits::loaders;
 
 #[derive(Debug, Display)]
@@ -128,7 +129,14 @@ pub trait LoaderTrait<T, FE>: Default + LoaderInternal<T, FE>
 where
     LoaderError<FE>: From<FE>,
 {
-    fn load_from_string(content: String) -> Result<T, LoaderError<FE>>
+    fn load_from_string(content: &str) -> Result<T, LoaderError<FE>>
+    where
+        Self: Sized,
+    {
+        Self::load_from_bytes(content.as_bytes())
+    }
+
+    fn load_from_bytes(content: &[u8]) -> Result<T, LoaderError<FE>>
     where
         Self: Sized;
 
@@ -141,13 +149,15 @@ where
 
         Ok(self.get_or_fetch_with_result(&normalize_url_for_cache(&url), |url_to_fetch| {
             // Value was not available on cache
-            Ok(Self::load_from_string(if url_to_fetch.scheme() == "file" {
-                read_to_string(url_to_fetch.to_file_path().unwrap())?
+            let bytes_content: Vec<u8> = if url_to_fetch.scheme() == "file" {
+                read(url_to_fetch.to_file_path().unwrap())?
             } else {
                 let client_builder = reqwest::Client::builder();
                 let client = client_builder.gzip(true).timeout(timeout).build()?;
-                client.get(url_to_fetch.as_ref()).send()?.error_for_status()?.text()?
-            })?)
+                let response = client.get(url_to_fetch.as_ref()).send()?.error_for_status()?;
+                response.bytes().filter_map(Result::ok).collect::<_>()
+            };
+            Self::load_from_bytes(bytes_content.as_slice())
         })?)
     }
 
