@@ -3,7 +3,7 @@ use serde_json;
 
 impl From<serde_json::Error> for LoaderError<serde_json::Error> {
     fn from(value: serde_json::Error) -> Self {
-        LoaderError::FormatError(value)
+        Self::FormatError(value)
     }
 }
 
@@ -12,10 +12,7 @@ impl LoaderTrait<serde_json::Value, serde_json::Error> for Loader<serde_json::Va
     where
         Self: Sized,
     {
-        match serde_json::from_str(&content) {
-            Ok(value) => Ok(value),
-            Err(serde_error) => Err(serde_error)?,
-        }
+        serde_json::from_str(&content).or_else(|serde_error| Err(serde_error)?)
     }
 }
 
@@ -27,8 +24,8 @@ mod tests {
         LoaderError, LoaderTrait,
     };
     use serde_json;
-    use std::io;
-    use test_case_derive::test_case;
+    use std::{io, sync::Arc};
+    use test_case::test_case;
 
     #[test]
     fn test_load_wrong_url_parse_error() {
@@ -73,7 +70,7 @@ mod tests {
     #[test_case("serde_json/String.json", json!["Some Text"])]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: serde_json::Value) {
         let loader = SerdeJsonLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), expected_loaded_object);
+        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
@@ -92,7 +89,7 @@ mod tests {
     #[test_case("serde_json/String.json", json!["Some Text"])]
     fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: serde_json::Value) {
         let loader = SerdeJsonLoader::default();
-        assert_eq!(mock_loader_request!(loader, file_path).unwrap(), expected_loaded_object);
+        assert_eq!(mock_loader_request!(loader, file_path).unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]

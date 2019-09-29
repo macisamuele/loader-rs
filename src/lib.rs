@@ -50,8 +50,7 @@ use crate::{
     private::LoaderInternal,
     url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
 };
-use failure::Fail;
-use std::{fmt::Debug, fs::read_to_string, io, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
+use std::{fs::read_to_string, io, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
 use url::Url;
 
 #[cfg(test)]
@@ -64,11 +63,8 @@ pub mod url_helpers;
 
 pub use traits::loaders;
 
-#[derive(Debug, Display, Fail)]
-pub enum LoaderError<FE>
-where
-    FE: 'static + Debug + Sync + Send,
-{
+#[derive(Debug, Display)]
+pub enum LoaderError<FE> {
     IOError(io::Error),
     InvalidURL(UrlError),
     FetchURLFailed(reqwest::Error),
@@ -76,71 +72,51 @@ where
     UnknownError,
 }
 
-impl<FE> From<io::Error> for LoaderError<FE>
-where
-    FE: Debug + Sync + Send,
-{
+impl<FE> From<io::Error> for LoaderError<FE> {
     fn from(error: io::Error) -> Self {
-        LoaderError::IOError(error)
+        Self::IOError(error)
     }
 }
 
-impl<FE> From<url::ParseError> for LoaderError<FE>
-where
-    FE: Debug + Sync + Send,
-{
+impl<FE> From<url::ParseError> for LoaderError<FE> {
     fn from(error: url::ParseError) -> Self {
-        LoaderError::InvalidURL(UrlError::ParseError(error))
+        Self::InvalidURL(UrlError::ParseError(error))
     }
 }
 
-impl<FE> From<url::SyntaxViolation> for LoaderError<FE>
-where
-    FE: Debug + Sync + Send,
-{
+impl<FE> From<url::SyntaxViolation> for LoaderError<FE> {
     fn from(error: url::SyntaxViolation) -> Self {
-        LoaderError::InvalidURL(UrlError::SyntaxViolation(error))
+        Self::InvalidURL(UrlError::SyntaxViolation(error))
     }
 }
 
-impl<FE> From<UrlError> for LoaderError<FE>
-where
-    FE: Debug + Sync + Send,
-{
+impl<FE> From<UrlError> for LoaderError<FE> {
     fn from(error: UrlError) -> Self {
-        LoaderError::InvalidURL(error)
+        Self::InvalidURL(error)
     }
 }
 
-impl<FE> From<reqwest::Error> for LoaderError<FE>
-where
-    FE: Debug + Sync + Send,
-{
+impl<FE> From<reqwest::Error> for LoaderError<FE> {
     fn from(error: reqwest::Error) -> Self {
-        LoaderError::FetchURLFailed(error)
+        Self::FetchURLFailed(error)
     }
 }
 
-impl<FE> Default for LoaderError<FE>
-where
-    FE: Debug + Sync + Send,
-{
+impl<FE> Default for LoaderError<FE> {
     #[inline]
     fn default() -> Self {
-        LoaderError::UnknownError
+        Self::UnknownError
     }
 }
 
 // Prevent users from implementing the LoaderInternal trait. (Idea extrapolated from libcore/slice/mod.rs)
 mod private {
     use crate::LoaderError;
-    use std::{fmt::Debug, sync::Arc};
+    use std::sync::Arc;
     use url::Url;
 
     pub trait LoaderInternal<T, FE>
     where
-        T: Debug,
-        FE: 'static + Debug + Sync + Send,
         LoaderError<FE>: From<FE>,
     {
         fn set<R: AsRef<str>>(&self, url: R, value: T) -> Result<(), LoaderError<FE>>;
@@ -148,47 +124,31 @@ mod private {
     }
 }
 
-pub trait LoaderTrait<T, FE>: Default + Sync + Send + LoaderInternal<T, FE>
+pub trait LoaderTrait<T, FE>: Default + LoaderInternal<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn load_from_string(content: String) -> Result<T, LoaderError<FE>>
     where
         Self: Sized;
 
-    fn load<R: AsRef<str>>(&self, url: R) -> Result<T, LoaderError<FE>> {
+    fn load<R: AsRef<str>>(&self, url: R) -> Result<Arc<T>, LoaderError<FE>> {
         self.load_with_timeout(url, Duration::from_millis(30_000))
     }
 
-    #[allow(unused_variables)]
-    fn extract_fragment(value: Arc<T>, url: &Url) -> T
-    where
-        Self: Sized,
-    {
-        value.deref().clone()
-    }
-
-    fn load_with_timeout<R: AsRef<str>>(&self, url: R, timeout: Duration) -> Result<T, LoaderError<FE>> {
+    fn load_with_timeout<R: AsRef<str>>(&self, url: R, timeout: Duration) -> Result<Arc<T>, LoaderError<FE>> {
         let url = parse_and_normalize_url(url)?;
 
-        let normalized_url = normalize_url_for_cache(&url);
-
-        let cached_value = {
-            let thing: Result<Arc<T>, LoaderError<FE>> = self.get_or_fetch_with_result(&normalized_url, |url_to_fetch| {
-                // Value was not available on cache
-                Ok(Self::load_from_string(if url_to_fetch.scheme() == "file" {
-                    read_to_string(url_to_fetch.to_file_path().unwrap())?
-                } else {
-                    let client_builder = reqwest::Client::builder();
-                    let client = client_builder.gzip(true).timeout(timeout).build()?;
-                    client.get(url_to_fetch.as_ref()).send()?.error_for_status()?.text()?
-                })?)
-            });
-            thing?
-        };
-        Ok(Self::extract_fragment(cached_value, &url))
+        Ok(self.get_or_fetch_with_result(&normalize_url_for_cache(&url), |url_to_fetch| {
+            // Value was not available on cache
+            Ok(Self::load_from_string(if url_to_fetch.scheme() == "file" {
+                read_to_string(url_to_fetch.to_file_path().unwrap())?
+            } else {
+                let client_builder = reqwest::Client::builder();
+                let client = client_builder.gzip(true).timeout(timeout).build()?;
+                client.get(url_to_fetch.as_ref()).send()?.error_for_status()?.text()?
+            })?)
+        })?)
     }
 
     // This method is needed to extract internal_get_or_fetch_with_result from the internal trait
@@ -200,8 +160,6 @@ where
 #[derive(Debug)]
 pub struct Loader<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     cache: Cache<Url, T>,
@@ -210,8 +168,6 @@ where
 
 impl<T, FE> Default for Loader<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     fn default() -> Self {
@@ -224,8 +180,6 @@ where
 
 impl<T, FE> LoaderInternal<T, FE> for Loader<T, FE>
 where
-    T: Clone + Debug,
-    FE: 'static + Debug + Sync + Send,
     LoaderError<FE>: From<FE>,
 {
     #[inline]
@@ -236,7 +190,7 @@ where
 
     #[inline]
     fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
-        self.cache.get_or_fetch_with_result(key, fetcher)
+        self.cache.get_or_fetch_with_result(key.clone(), fetcher)
     }
 }
 

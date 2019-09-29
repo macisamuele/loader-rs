@@ -3,7 +3,7 @@ use serde_yaml;
 
 impl From<serde_yaml::Error> for LoaderError<serde_yaml::Error> {
     fn from(value: serde_yaml::Error) -> Self {
-        LoaderError::FormatError(value)
+        Self::FormatError(value)
     }
 }
 
@@ -12,10 +12,7 @@ impl LoaderTrait<serde_yaml::Value, serde_yaml::Error> for Loader<serde_yaml::Va
     where
         Self: Sized,
     {
-        match serde_yaml::from_str(&content) {
-            Ok(value) => Ok(value),
-            Err(serde_error) => Err(serde_error)?,
-        }
+        serde_yaml::from_str(&content).or_else(|serde_error| Err(serde_error)?)
     }
 }
 
@@ -27,8 +24,8 @@ mod tests {
         LoaderError, LoaderTrait,
     };
     use serde_yaml;
-    use std::io;
-    use test_case_derive::test_case;
+    use std::{io, sync::Arc};
+    use test_case::test_case;
 
     #[test]
     fn test_load_wrong_url_parse_error() {
@@ -73,7 +70,7 @@ mod tests {
     #[test_case("serde_yaml/String.yaml", yaml!["Some Text"])]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: serde_yaml::Value) {
         let loader = SerdeYamlLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), expected_loaded_object);
+        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
@@ -92,7 +89,7 @@ mod tests {
     #[test_case("serde_yaml/String.yaml", yaml!["Some Text"])]
     fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: serde_yaml::Value) {
         let loader = SerdeYamlLoader::default();
-        assert_eq!(mock_loader_request!(loader, file_path).unwrap(), expected_loaded_object);
+        assert_eq!(mock_loader_request!(loader, file_path).unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]

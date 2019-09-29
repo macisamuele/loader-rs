@@ -7,19 +7,6 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-impl<K, V> Clone for Internal<K, V>
-where
-    K: Clone + Eq + Hash,
-    V: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            data_holder: RwLock::new(self.data_holder.read().unwrap().clone()),
-            stats: RwLock::new(*self.stats.read().unwrap()),
-        }
-    }
-}
-
 impl<K, V> Default for Internal<K, V>
 where
     K: Eq + Hash,
