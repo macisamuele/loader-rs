@@ -28,7 +28,7 @@ mod tests {
     };
     use serde_json;
     use std::{io, sync::Arc};
-    use test_case_derive::test_case;
+    use test_case::test_case;
 
     #[test]
     fn test_load_wrong_url_parse_error() {

@@ -124,17 +124,17 @@ pub(crate) fn test_data_file_url(path: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::{parse_and_normalize_url, UrlError};
-    use test_case_derive::test_case;
+    use test_case::test_case;
     use url::{ParseError, SyntaxViolation};
 
-    #[test_case("memory://", "memory:///#/" :: "url_with_no_path_no_fragment")]
-    #[test_case("memory://#", "memory:///#/" :: "url_with_no_path")]
-    #[test_case("memory:///", "memory:///#/" :: "url_with_no_fragment")]
-    #[test_case("memory:///#", "memory:///#/" :: "url_with_path_and_fragment")]
-    #[test_case("memory:///#/", "memory:///#/" :: "url_with_path_and_fragment_normalized")]
-    #[test_case("memory:///#fragment", "memory:///#/fragment" :: "url_with_path_and_not_empty_fragment_1")]
-    #[test_case("memory:///#/fragment", "memory:///#/fragment" :: "url_with_path_and_not_empty_fragment_2")]
-    #[test_case("memory:///#/fragment/", "memory:///#/fragment" :: "url_with_path_and_not_empty_fragment_3")]
+    #[test_case("memory://", "memory:///#/" ; "url_with_no_path_no_fragment")]
+    #[test_case("memory://#", "memory:///#/" ; "url_with_no_path")]
+    #[test_case("memory:///", "memory:///#/" ; "url_with_no_fragment")]
+    #[test_case("memory:///#", "memory:///#/" ; "url_with_path_and_fragment")]
+    #[test_case("memory:///#/", "memory:///#/" ; "url_with_path_and_fragment_normalized")]
+    #[test_case("memory:///#fragment", "memory:///#/fragment" ; "url_with_path_and_not_empty_fragment_1")]
+    #[test_case("memory:///#/fragment", "memory:///#/fragment" ; "url_with_path_and_not_empty_fragment_2")]
+    #[test_case("memory:///#/fragment/", "memory:///#/fragment" ; "url_with_path_and_not_empty_fragment_3")]
     fn test_parse_and_normalize_url_valid_case(url_str: &str, expected_result_str: &str) {
         assert_eq!(parse_and_normalize_url(url_str).unwrap().as_str(), expected_result_str);
     }
@@ -150,12 +150,12 @@ mod tests {
         assert_eq!(parse_and_normalize_url(url_str).unwrap_err(), expected_err);
     }
     //    #[allow(clippy::redundant_closure)]
-    //    #[test_case("", vec![] :: "empty fragment")]
-    //    #[test_case("#", vec![] :: "Only pound in fragment")]
-    //    #[test_case("/", vec![] :: "Only slash in fragment")]
-    //    #[test_case("#/", vec![] :: "Pound and slash in fragment")]
-    //    #[test_case("/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment not starting with pound")]
-    //    #[test_case("#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment starting with pound")]
+    //    #[test_case("", vec![] ; "empty fragment")]
+    //    #[test_case("#", vec![] ; "Only pound in fragment")]
+    //    #[test_case("/", vec![] ; "Only slash in fragment")]
+    //    #[test_case("#/", vec![] ; "Pound and slash in fragment")]
+    //    #[test_case("/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] ; "Complex fragment not starting with pound")]
+    //    #[test_case("#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] ; "Complex fragment starting with pound")]
     //    fn test_extract_fragment_components_from_fragment_string(url_str: &str, expected_result: Vec<&str>) {
     //        assert_eq!(
     //            extract_fragment_components_from_fragment_string(url_str),
@@ -164,9 +164,9 @@ mod tests {
     //    }
     //
     //    #[allow(clippy::redundant_closure)]
-    //    #[test_case("memory://", vec![] :: "Bare minimal url")]
-    //    #[test_case("memory://#/", vec![] :: "Minimal url with fragment")]
-    //    #[test_case("memory://#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] :: "Complex fragment")]
+    //    #[test_case("memory://", vec![] ; "Bare minimal url")]
+    //    #[test_case("memory://#/", vec![] ; "Minimal url with fragment")]
+    //    #[test_case("memory://#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] ; "Complex fragment")]
     //    fn test_extract_fragment_components(url_str: &str, expected_result: Vec<&str>) {
     //        assert_eq!(
     //            extract_fragment_components(&parse_and_normalize_url(url_str).ok().unwrap()),
