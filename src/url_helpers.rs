@@ -15,13 +15,13 @@ pub enum UrlError {
 
 impl From<ParseError> for UrlError {
     fn from(error: ParseError) -> Self {
-        UrlError::ParseError(error)
+        Self::ParseError(error)
     }
 }
 
 impl From<SyntaxViolation> for UrlError {
     fn from(error: SyntaxViolation) -> Self {
-        UrlError::SyntaxViolation(error)
+        Self::SyntaxViolation(error)
     }
 }
 

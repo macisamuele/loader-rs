@@ -3,7 +3,7 @@ use serde_json;
 
 impl From<serde_json::Error> for LoaderError<serde_json::Error> {
     fn from(value: serde_json::Error) -> Self {
-        LoaderError::FormatError(value)
+        Self::FormatError(value)
     }
 }
 
@@ -12,10 +12,7 @@ impl LoaderTrait<serde_json::Value, serde_json::Error> for Loader<serde_json::Va
     where
         Self: Sized,
     {
-        match serde_json::from_str(&content) {
-            Ok(value) => Ok(value),
-            Err(serde_error) => Err(serde_error)?,
-        }
+        serde_json::from_str(&content).or_else(|serde_error| Err(serde_error)?)
     }
 }
 

@@ -3,7 +3,7 @@ use serde_yaml;
 
 impl From<serde_yaml::Error> for LoaderError<serde_yaml::Error> {
     fn from(value: serde_yaml::Error) -> Self {
-        LoaderError::FormatError(value)
+        Self::FormatError(value)
     }
 }
 
@@ -12,10 +12,7 @@ impl LoaderTrait<serde_yaml::Value, serde_yaml::Error> for Loader<serde_yaml::Va
     where
         Self: Sized,
     {
-        match serde_yaml::from_str(&content) {
-            Ok(value) => Ok(value),
-            Err(serde_error) => Err(serde_error)?,
-        }
+        serde_yaml::from_str(&content).or_else(|serde_error| Err(serde_error)?)
     }
 }
 

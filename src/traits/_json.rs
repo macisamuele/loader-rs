@@ -3,7 +3,7 @@ use json;
 
 impl From<json::Error> for LoaderError<json::Error> {
     fn from(value: json::Error) -> Self {
-        LoaderError::FormatError(value)
+        Self::FormatError(value)
     }
 }
 
@@ -12,10 +12,7 @@ impl LoaderTrait<json::JsonValue, json::Error> for Loader<json::JsonValue, json:
     where
         Self: Sized,
     {
-        match json::parse(&content) {
-            Ok(value) => Ok(value),
-            Err(serde_error) => Err(serde_error)?,
-        }
+        json::parse(&content).or_else(|json_error| Err(json_error)?)
     }
 }
 

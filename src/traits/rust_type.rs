@@ -3,7 +3,7 @@ use json_trait_rs::RustType;
 
 impl From<()> for LoaderError<()> {
     fn from(_: ()) -> Self {
-        LoaderError::FormatError(())
+        Self::FormatError(())
     }
 }
 

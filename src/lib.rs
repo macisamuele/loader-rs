@@ -74,38 +74,38 @@ pub enum LoaderError<FE> {
 
 impl<FE> From<io::Error> for LoaderError<FE> {
     fn from(error: io::Error) -> Self {
-        LoaderError::IOError(error)
+        Self::IOError(error)
     }
 }
 
 impl<FE> From<url::ParseError> for LoaderError<FE> {
     fn from(error: url::ParseError) -> Self {
-        LoaderError::InvalidURL(UrlError::ParseError(error))
+        Self::InvalidURL(UrlError::ParseError(error))
     }
 }
 
 impl<FE> From<url::SyntaxViolation> for LoaderError<FE> {
     fn from(error: url::SyntaxViolation) -> Self {
-        LoaderError::InvalidURL(UrlError::SyntaxViolation(error))
+        Self::InvalidURL(UrlError::SyntaxViolation(error))
     }
 }
 
 impl<FE> From<UrlError> for LoaderError<FE> {
     fn from(error: UrlError) -> Self {
-        LoaderError::InvalidURL(error)
+        Self::InvalidURL(error)
     }
 }
 
 impl<FE> From<reqwest::Error> for LoaderError<FE> {
     fn from(error: reqwest::Error) -> Self {
-        LoaderError::FetchURLFailed(error)
+        Self::FetchURLFailed(error)
     }
 }
 
 impl<FE> Default for LoaderError<FE> {
     #[inline]
     fn default() -> Self {
-        LoaderError::UnknownError
+        Self::UnknownError
     }
 }
 
