@@ -1,4 +1,4 @@
-#![allow(
+#![deny(
     unreachable_pub,
     anonymous_parameters,
     bad_style,
@@ -41,7 +41,7 @@
 
 #[macro_use]
 extern crate strum_macros;
-#[cfg(test)]
+#[cfg(all(test, any(feature = "trait_json", feature = "trait_serde_json", feature = "trait_serde_yaml")))]
 #[macro_use]
 extern crate serde_json;
 
@@ -50,7 +50,7 @@ use crate::{
     private::LoaderInternal,
     url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
 };
-use std::{fs::read_to_string, io, marker::PhantomData, ops::Deref, sync::Arc, time::Duration};
+use std::{io, marker::PhantomData, sync::Arc, time::Duration};
 use url::Url;
 
 #[cfg(test)]

@@ -70,7 +70,7 @@ pub(crate) fn parse_and_normalize_url<R: AsRef<str>>(url: R) -> Result<Url, UrlE
         .syntax_violation_callback(Some(&|v| syntax_violations.borrow_mut().push(v)))
         .parse(url.as_ref())?;
     if let Some(violation) = syntax_violations.borrow().first() {
-        Err(*violation)?
+        return Err(Into::into(*violation));
     }
 
     let cloned_url = url.clone();
