@@ -12,7 +12,7 @@ impl LoaderTrait<serde_yaml::Value, serde_yaml::Error> for Loader<serde_yaml::Va
     where
         Self: Sized,
     {
-        serde_yaml::from_slice(content).or_else(|serde_error| Err(serde_error)?)
+        serde_yaml::from_slice(content).or_else(|serde_error| Err(serde_error.into()))
     }
 }
 

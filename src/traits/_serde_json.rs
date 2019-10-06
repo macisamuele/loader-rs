@@ -12,7 +12,7 @@ impl LoaderTrait<serde_json::Value, serde_json::Error> for Loader<serde_json::Va
     where
         Self: Sized,
     {
-        serde_json::from_slice(content).or_else(|serde_error| Err(serde_error)?)
+        serde_json::from_slice(content).or_else(|serde_error| Err(serde_error.into()))
     }
 }
 
@@ -33,7 +33,7 @@ mod tests {
         if let Err(LoaderError::InvalidURL(UrlError::ParseError(url::ParseError::RelativeUrlWithoutBase))) = expression_result {
         } else {
             panic!(
-                "Expected LoaderError::InvalidURL(UrlError::ParseError(url::ParseError::RelativeUrlWithoutBase)), received {:?}",
+                "Expectefd LoaderError::InvalidURL(UrlError::ParseError(url::ParseError::RelativeUrlWithoutBase)), received {:?}",
                 expression_result
             );
         }

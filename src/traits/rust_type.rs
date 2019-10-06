@@ -17,7 +17,7 @@ impl LoaderTrait<RustType, ()> for Loader<RustType, ()> {
         if string_content.is_empty() {
             Ok(RustType::Null)
         } else if "ERR" == string_content {
-            Err(())?
+            Err(().into())
         } else if let Ok(value) = string_content.parse::<i32>() {
             Ok(RustType::from(value))
         } else if let Ok(value) = string_content.parse::<bool>() {
