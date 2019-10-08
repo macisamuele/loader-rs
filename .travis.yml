@@ -4,7 +4,6 @@ rust: stable
 env:
   global:
   - RUST_BACKTRACE=full
-  - KCOV_DIR=${HOME}/.cache/tools/kcov
   - CODECOV_DIR=${HOME}/.cache/tools/codecov
 
 matrix:
@@ -39,7 +38,6 @@ cache:
   timeout: 3600
   directories:
   - ${HOME}/.cache/pre-commit
-  - ${KCOV_DIR}
   - ${CODECOV_DIR}
   - ${HOME}/.cargo/
   - ${TRAVIS_BUILD_DIR}/target
