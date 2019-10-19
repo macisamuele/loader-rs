@@ -149,38 +149,4 @@ mod tests {
     fn test_parse_and_normalize_url_invalid_case(url_str: &str, expected_err: &UrlError) {
         assert_eq!(&parse_and_normalize_url(url_str).unwrap_err(), expected_err);
     }
-    //    #[allow(clippy::redundant_closure)]
-    //    #[test_case("", vec![] ; "empty fragment")]
-    //    #[test_case("#", vec![] ; "Only pound in fragment")]
-    //    #[test_case("/", vec![] ; "Only slash in fragment")]
-    //    #[test_case("#/", vec![] ; "Pound and slash in fragment")]
-    //    #[test_case("/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] ; "Complex fragment not starting with pound")]
-    //    #[test_case("#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] ; "Complex fragment starting with pound")]
-    //    fn test_extract_fragment_components_from_fragment_string(url_str: &str, expected_result: Vec<&str>) {
-    //        assert_eq!(
-    //            extract_fragment_components_from_fragment_string(url_str),
-    //            expected_result.iter().map(|part: &&str| part.to_string()).collect::<Vec<String>>()
-    //        );
-    //    }
-    //
-    //    #[allow(clippy::redundant_closure)]
-    //    #[test_case("memory://", vec![] ; "Bare minimal url")]
-    //    #[test_case("memory://#/", vec![] ; "Minimal url with fragment")]
-    //    #[test_case("memory://#/a/~0/b/~1/c", vec!["a", "~", "b", "/", "c"] ; "Complex fragment")]
-    //    fn test_extract_fragment_components(url_str: &str, expected_result: Vec<&str>) {
-    //        assert_eq!(
-    //            extract_fragment_components(&parse_and_normalize_url(url_str).ok().unwrap()),
-    //            expected_result.iter().map(|part: &&str| part.to_string()).collect::<Vec<String>>()
-    //        );
-    //    }
-    //
-    //    #[test_case("memory://", vec![], "memory:///#")]
-    //    #[test_case("memory://", vec!["a"], "memory:///#/a")]
-    //    #[test_case("memory://#/a/b", vec!["c"], "memory:///#/a/b/c")]
-    //    fn test_append_fragment_components(url_str: &str, components_to_add: Vec<&str>, expected_result: &str) {
-    //        assert_eq!(
-    //            append_fragment_components(&parse_and_normalize_url(url_str).ok().unwrap(), components_to_add).as_str(),
-    //            expected_result,
-    //        );
-    //    }
 }
