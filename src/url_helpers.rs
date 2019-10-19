@@ -139,15 +139,15 @@ mod tests {
         assert_eq!(parse_and_normalize_url(url_str).unwrap().as_str(), expected_result_str);
     }
 
-    #[test_case("http:///", UrlError::ParseError(ParseError::EmptyHost))]
-    #[test_case("http://300.0.0.0/", UrlError::ParseError(ParseError::InvalidIpv4Address))]
-    #[test_case("memory://#/\0a", UrlError::SyntaxViolation(SyntaxViolation::NullInFragment))]
-    #[test_case("http:/example", UrlError::SyntaxViolation(SyntaxViolation::ExpectedDoubleSlash))]
-    #[test_case("memory://#/~", UrlError::JsonFragmentError(String::from("~")))]
-    #[test_case("memory://#/~a", UrlError::JsonFragmentError(String::from("~a")))]
-    #[test_case("memory://#/~0/~1/~c", UrlError::JsonFragmentError(String::from("~c")))]
-    fn test_parse_and_normalize_url_invalid_case(url_str: &str, expected_err: UrlError) {
-        assert_eq!(parse_and_normalize_url(url_str).unwrap_err(), expected_err);
+    #[test_case("http:///", &UrlError::ParseError(ParseError::EmptyHost))]
+    #[test_case("http://300.0.0.0/", &UrlError::ParseError(ParseError::InvalidIpv4Address))]
+    #[test_case("memory://#/\0a", &UrlError::SyntaxViolation(SyntaxViolation::NullInFragment))]
+    #[test_case("http:/example", &UrlError::SyntaxViolation(SyntaxViolation::ExpectedDoubleSlash))]
+    #[test_case("memory://#/~", &UrlError::JsonFragmentError(String::from("~")))]
+    #[test_case("memory://#/~a", &UrlError::JsonFragmentError(String::from("~a")))]
+    #[test_case("memory://#/~0/~1/~c", &UrlError::JsonFragmentError(String::from("~c")))]
+    fn test_parse_and_normalize_url_invalid_case(url_str: &str, expected_err: &UrlError) {
+        assert_eq!(&parse_and_normalize_url(url_str).unwrap_err(), expected_err);
     }
     //    #[allow(clippy::redundant_closure)]
     //    #[test_case("", vec![] ; "empty fragment")]
