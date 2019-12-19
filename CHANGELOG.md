@@ -1,6 +1,10 @@
 Changelog
 =========
 
+0.4.1 (2019-12-19)
+------------------
+- Internal fixes, no changes to lib code
+
 0.4.0 (2019-09-30)
 ------------------
 - `LoaderTrait` traits cleanup (remove not needed Sync, Send, Clone, Debug, etc.) - [PR #5](https://github.com/macisamuele/loader-rs/pull/5)
