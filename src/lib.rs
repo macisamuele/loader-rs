@@ -74,30 +74,35 @@ pub enum LoaderError<FE> {
 }
 
 impl<FE> From<io::Error> for LoaderError<FE> {
+    #[must_use]
     fn from(error: io::Error) -> Self {
         Self::IOError(error)
     }
 }
 
 impl<FE> From<url::ParseError> for LoaderError<FE> {
+    #[must_use]
     fn from(error: url::ParseError) -> Self {
         Self::InvalidURL(UrlError::ParseError(error))
     }
 }
 
 impl<FE> From<url::SyntaxViolation> for LoaderError<FE> {
+    #[must_use]
     fn from(error: url::SyntaxViolation) -> Self {
         Self::InvalidURL(UrlError::SyntaxViolation(error))
     }
 }
 
 impl<FE> From<UrlError> for LoaderError<FE> {
+    #[must_use]
     fn from(error: UrlError) -> Self {
         Self::InvalidURL(error)
     }
 }
 
 impl<FE> From<reqwest::Error> for LoaderError<FE> {
+    #[must_use]
     fn from(error: reqwest::Error) -> Self {
         Self::FetchURLFailed(error)
     }
@@ -105,6 +110,7 @@ impl<FE> From<reqwest::Error> for LoaderError<FE> {
 
 impl<FE> Default for LoaderError<FE> {
     #[inline]
+    #[must_use]
     fn default() -> Self {
         Self::UnknownError
     }
@@ -180,6 +186,7 @@ impl<T, FE> Default for Loader<T, FE>
 where
     LoaderError<FE>: From<FE>,
 {
+    #[must_use]
     fn default() -> Self {
         Self {
             cache: Cache::default(),

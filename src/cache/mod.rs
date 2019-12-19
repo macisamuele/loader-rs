@@ -73,6 +73,7 @@ where
     K: Eq + Hash,
 {
     #[inline]
+    #[must_use]
     fn default() -> Self {
         Self(Internal::default())
     }

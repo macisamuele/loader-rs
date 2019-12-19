@@ -2,6 +2,7 @@ use crate::{Loader, LoaderError, LoaderTrait};
 use json_trait_rs::RustType;
 
 impl From<()> for LoaderError<()> {
+    #[must_use]
     fn from(_: ()) -> Self {
         Self::FormatError(())
     }
@@ -119,7 +120,7 @@ mod tests {
         let loader = RustTypeLoader::default();
         let load_result = mock_loader_request!(loader, 404, "testing/Null.txt");
         if let Err(LoaderError::FetchURLFailed(value)) = load_result {
-            assert_eq!(value.status().and_then(|value| Some(value.as_u16())), Some(404))
+            assert_eq!(value.status().map(|value| value.as_u16()), Some(404))
         } else {
             panic!("Expected LoaderError::FetchURLFailed(...), received {:?}", load_result);
         }

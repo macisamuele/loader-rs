@@ -11,6 +11,7 @@ impl<K, V> Default for Internal<K, V>
 where
     K: Eq + Hash,
 {
+    #[must_use]
     fn default() -> Self {
         Self {
             data_holder: RwLock::new(HashMap::default()),

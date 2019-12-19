@@ -14,12 +14,14 @@ pub enum UrlError {
 }
 
 impl From<ParseError> for UrlError {
+    #[must_use]
     fn from(error: ParseError) -> Self {
         Self::ParseError(error)
     }
 }
 
 impl From<SyntaxViolation> for UrlError {
+    #[must_use]
     fn from(error: SyntaxViolation) -> Self {
         Self::SyntaxViolation(error)
     }
@@ -29,7 +31,7 @@ impl From<SyntaxViolation> for UrlError {
 fn get_invalid_fragment_part_according_to_json_pointer_rules(url: &Url) -> Option<String> {
     // Checks https://tools.ietf.org/html/rfc6901 rules
     let regex = Regex::new("#.*(~([^01]|$))").unwrap();
-    regex.captures(url.as_str()).and_then(|captures| Some(String::from(&captures[1])))
+    regex.captures(url.as_str()).map(|captures| String::from(&captures[1]))
 }
 
 #[cfg(not(feature = "regular_expression"))]
