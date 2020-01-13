@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.5.0 (2020-01-13)
+------------------
+- Support reqwest 0.10+ - [PR #14](https://github.com/macisamuele/loader-rs/pull/14)
+- Add `must_use` annotation to trait methods (silence lints) - [PR #12](https://github.com/macisamuele/loader-rs/pull/12)
+
 0.4.1 (2019-12-19)
 ------------------
 - Internal fixes, no changes to lib code
