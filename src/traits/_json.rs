@@ -2,6 +2,7 @@ use crate::{Loader, LoaderError, LoaderTrait};
 use json;
 
 impl From<json::Error> for LoaderError<json::Error> {
+    #[must_use]
     fn from(value: json::Error) -> Self {
         Self::FormatError(value)
     }
@@ -117,7 +118,7 @@ mod tests {
         let loader = JsonLoader::default();
         let load_result = mock_loader_request!(loader, 404, "json/Null.json");
         if let Err(LoaderError::FetchURLFailed(value)) = load_result {
-            assert_eq!(value.status().and_then(|value| Some(value.as_u16())), Some(404))
+            assert_eq!(value.status().map(|value| value.as_u16()), Some(404))
         } else {
             panic!("Expected LoaderError::FetchURLFailed(...), received {:?}", load_result);
         }

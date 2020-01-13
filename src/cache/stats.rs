@@ -1,6 +1,7 @@
 use crate::cache::Stats;
 
 impl Default for Stats {
+    #[must_use]
     fn default() -> Self {
         Self { hits: 0, misses: 0 }
     }

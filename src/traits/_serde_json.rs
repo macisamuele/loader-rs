@@ -2,6 +2,7 @@ use crate::{Loader, LoaderError, LoaderTrait};
 use serde_json;
 
 impl From<serde_json::Error> for LoaderError<serde_json::Error> {
+    #[must_use]
     fn from(value: serde_json::Error) -> Self {
         Self::FormatError(value)
     }
@@ -107,7 +108,7 @@ mod tests {
         let loader = SerdeJsonLoader::default();
         let load_result = mock_loader_request!(loader, 404, "serde_json/Null.json");
         if let Err(LoaderError::FetchURLFailed(value)) = load_result {
-            assert_eq!(value.status().and_then(|value| Some(value.as_u16())), Some(404))
+            assert_eq!(value.status().map(|value| value.as_u16()), Some(404))
         } else {
             panic!("Expected LoaderError::FetchURLFailed(...), received {:?}", load_result);
         }
