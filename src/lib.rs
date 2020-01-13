@@ -152,7 +152,7 @@ where
             let bytes_content: Vec<u8> = if url_to_fetch.scheme() == "file" {
                 read(url_to_fetch.to_file_path().unwrap())?
             } else {
-                let client_builder = reqwest::Client::builder();
+                let client_builder = reqwest::blocking::Client::builder();
                 let client = client_builder.gzip(true).timeout(timeout).build()?;
                 let response = client.get(url_to_fetch.as_ref()).send()?.error_for_status()?;
                 response.bytes().filter_map(Result::ok).collect::<_>()
