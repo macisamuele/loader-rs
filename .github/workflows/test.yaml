@@ -1,0 +1,53 @@
+name: Rust Tests
+
+on:
+  push:
+    branches:
+    - master
+  pull_request: {}
+  schedule:
+  - cron: 0 13 * * *
+
+jobs:
+  test-stable: &test_stable
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust-version: [stable]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust-version }}
+        override: true
+    - name: Build
+      run: make build-all-flavours
+    - name: Run tests
+      run: make test-all-flavours
+
+  test-nightly:
+    <<: *test_stable
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        rust-version: [nightly]
+
+  lint:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        rust-version: [nightly]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust-version }}
+        override: true
+    - name: pre-commit hooks
+      run: make pre-commit
+    - name: clippy
+      run: make clippy-all-flavours
