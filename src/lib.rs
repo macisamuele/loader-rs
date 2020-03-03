@@ -36,6 +36,8 @@
     unused_variables,
     warnings,
 )]
+// This is not great, but the library is not stable enough to write documentation
+#![allow(clippy::missing_errors_doc)]
 // Ignore missing_const_for_fn clippy linter (it's too noisy in regards const fn in traits)
 #![allow(clippy::missing_const_for_fn)]
 
@@ -46,22 +48,22 @@ extern crate strum_macros;
 extern crate serde_json;
 
 use crate::{
-    cache::{Cache, Cached},
     private::LoaderInternal,
     url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
 };
-use std::{io, marker::PhantomData, sync::Arc, time::Duration};
+use std::{io, marker::PhantomData, time::Duration};
 use url::Url;
 
 #[cfg(test)]
 #[macro_use]
 mod macros;
 
-pub mod cache;
+mod arc_cache;
 pub mod traits;
 pub mod url_helpers;
 
-use std::{fs::read, io::Read};
+use crate::arc_cache::ThreadSafeCache;
+use std::{fs::read, io::Read, sync::Arc};
 pub use traits::loaders;
 
 #[derive(Debug, Display)]
@@ -126,8 +128,10 @@ mod private {
     where
         LoaderError<FE>: From<FE>,
     {
-        fn set<R: AsRef<str>>(&self, url: R, value: T) -> Result<(), LoaderError<FE>>;
-        fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>>;
+        fn set(&self, url: &str, value: T) -> Result<(), LoaderError<FE>>;
+        fn internal_get_or_fetch_with_result<F>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>>
+        where
+            F: FnOnce(&Url) -> Result<T, LoaderError<FE>>;
     }
 }
 
@@ -178,7 +182,7 @@ pub struct Loader<T, FE>
 where
     LoaderError<FE>: From<FE>,
 {
-    cache: Cache<Url, T>,
+    cache: ThreadSafeCache<Url, T>,
     format_error: PhantomData<FE>,
 }
 
@@ -189,7 +193,7 @@ where
     #[must_use]
     fn default() -> Self {
         Self {
-            cache: Cache::default(),
+            cache: ThreadSafeCache::default(),
             format_error: PhantomData,
         }
     }
@@ -200,14 +204,25 @@ where
     LoaderError<FE>: From<FE>,
 {
     #[inline]
-    fn set<R: AsRef<str>>(&self, url: R, value: T) -> Result<(), LoaderError<FE>> {
-        self.cache.set(normalize_url_for_cache(&parse_and_normalize_url(url)?), value);
+    fn set(&self, url: &str, value: T) -> Result<(), LoaderError<FE>> {
+        self.cache.set(&normalize_url_for_cache(&parse_and_normalize_url(url)?), value);
         Ok(())
     }
 
     #[inline]
     fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
-        self.cache.get_or_fetch_with_result(key.clone(), fetcher)
+        if let Some(value) = self.cache.get(key) {
+            Ok(value)
+        } else {
+            match fetcher(key) {
+                Ok(fetched_value) => {
+                    let arc_fetched_value = Arc::new(fetched_value);
+                    self.cache.set_arc(key, arc_fetched_value.clone());
+                    Ok(arc_fetched_value)
+                }
+                Err(loader_error) => Err(loader_error),
+            }
+        }
     }
 }
 
