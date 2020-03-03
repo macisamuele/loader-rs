@@ -50,7 +50,7 @@ mod tests {
         let loader = SerdeYamlLoader::default();
         let mut non_exiting_file_url = test_data_file_url("serde_yaml/Null.yaml");
         non_exiting_file_url.push_str("_not_existing");
-        let load_result = loader.load(non_exiting_file_url);
+        let load_result = loader.load(&non_exiting_file_url);
         if let Err(LoaderError::IOError(value)) = load_result {
             assert_eq!(value.kind(), io::ErrorKind::NotFound);
         } else {
@@ -64,13 +64,13 @@ mod tests {
     #[test_case("serde_yaml/String.yaml", yaml!["Some Text"])]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: serde_yaml::Value) {
         let loader = SerdeYamlLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
+        assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
     fn test_load_from_file_invalid_content() {
         let loader = SerdeYamlLoader::default();
-        let load_result = loader.load(test_data_file_url("serde_yaml/Invalid.yaml"));
+        let load_result = loader.load(&test_data_file_url("serde_yaml/Invalid.yaml"));
         if let Err(LoaderError::FormatError(value)) = load_result {
             assert_eq!("while parsing a node, did not find expected node content at line 2 column 1", &value);
         } else {

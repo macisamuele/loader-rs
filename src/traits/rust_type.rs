@@ -62,7 +62,7 @@ mod tests {
         let loader = RustTypeLoader::default();
         let mut non_exiting_file_url = test_data_file_url("testing/Null.txt");
         non_exiting_file_url.push_str("_not_existing");
-        let load_result = loader.load(non_exiting_file_url);
+        let load_result = loader.load(&non_exiting_file_url);
         if let Err(LoaderError::IOError(value)) = load_result {
             assert_eq!(value.kind(), io::ErrorKind::NotFound);
         } else {
@@ -76,13 +76,13 @@ mod tests {
     #[test_case("testing/String.txt", RustType::from("Some Text"))]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: RustType) {
         let loader = RustTypeLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
+        assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
     fn test_load_from_file_invalid_content() {
         let loader = RustTypeLoader::default();
-        let load_result = loader.load(test_data_file_url("testing/Invalid.txt"));
+        let load_result = loader.load(&test_data_file_url("testing/Invalid.txt"));
         if let Err(LoaderError::FormatError(value)) = load_result {
             assert_eq!("ERR", &value);
         } else {

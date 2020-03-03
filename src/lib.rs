@@ -157,11 +157,11 @@ pub trait LoaderTrait<T>: Sized + LoaderInternal<T> {
     where
         Self: Sized;
 
-    fn load<R: AsRef<str>>(&self, url: R) -> Result<Arc<T>, LoaderError> {
+    fn load(&self, url: &str) -> Result<Arc<T>, LoaderError> {
         self.load_with_timeout(url, Duration::from_millis(30_000))
     }
 
-    fn load_with_timeout<R: AsRef<str>>(&self, url: R, timeout: Duration) -> Result<Arc<T>, LoaderError> {
+    fn load_with_timeout(&self, url: &str, timeout: Duration) -> Result<Arc<T>, LoaderError> {
         let url = parse_and_normalize_url(url)?;
 
         Ok(self.get_or_fetch_with_result(&normalize_url_for_cache(&url), |url_to_fetch| {

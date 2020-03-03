@@ -68,7 +68,7 @@ mod tests {
         let loader = JsonLoader::default();
         let mut non_exiting_file_url = test_data_file_url("json/Null.json");
         non_exiting_file_url.push_str("_not_existing");
-        let load_result = loader.load(non_exiting_file_url);
+        let load_result = loader.load(&non_exiting_file_url);
         if let Err(LoaderError::IOError(value)) = load_result {
             assert_eq!(value.kind(), io::ErrorKind::NotFound);
         } else {
@@ -82,13 +82,13 @@ mod tests {
     #[test_case("json/String.json", rust_json!["Some Text"])]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: json::JsonValue) {
         let loader = JsonLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
+        assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
     fn test_load_from_file_invalid_content() {
         let loader = JsonLoader::default();
-        let load_result = loader.load(test_data_file_url("json/Invalid.json"));
+        let load_result = loader.load(&test_data_file_url("json/Invalid.json"));
         if let Err(LoaderError::FormatError(value)) = load_result {
             assert_eq!(value, json::Error::UnexpectedEndOfJson.to_string());
         } else {

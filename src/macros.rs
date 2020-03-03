@@ -14,7 +14,7 @@ macro_rules! mock_loader_request {
             .create();
         let url = url::Url::parse(&server_url()).unwrap().join(url_path.as_str()).unwrap();
 
-        let value = $loader.load(url);
+        let value = $loader.load(url.as_ref());
         mocked_request.expect(1).assert();
 
         value
