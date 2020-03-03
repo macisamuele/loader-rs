@@ -1,19 +1,12 @@
 use crate::{Loader, LoaderError, LoaderTrait};
 use serde_yaml;
 
-impl From<serde_yaml::Error> for LoaderError<serde_yaml::Error> {
-    #[must_use]
-    fn from(value: serde_yaml::Error) -> Self {
-        Self::FormatError(value)
-    }
-}
-
-impl LoaderTrait<serde_yaml::Value, serde_yaml::Error> for Loader<serde_yaml::Value, serde_yaml::Error> {
-    fn load_from_bytes(content: &[u8]) -> Result<serde_yaml::Value, LoaderError<serde_yaml::Error>>
+impl LoaderTrait<serde_yaml::Value> for Loader<serde_yaml::Value> {
+    fn load_from_bytes(content: &[u8]) -> Result<serde_yaml::Value, LoaderError>
     where
         Self: Sized,
     {
-        serde_yaml::from_slice(content).or_else(|serde_error| Err(serde_error.into()))
+        serde_yaml::from_slice(content).or_else(|ref serde_error| Err(LoaderError::from(serde_error)))
     }
 }
 
@@ -78,9 +71,10 @@ mod tests {
     fn test_load_from_file_invalid_content() {
         let loader = SerdeYamlLoader::default();
         let load_result = loader.load(test_data_file_url("serde_yaml/Invalid.yaml"));
-        if let Err(LoaderError::FormatError(serde_yaml::Error { .. })) = load_result {
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!("while parsing a node, did not find expected node content at line 2 column 1", &value);
         } else {
-            panic!("Expected LoaderError::FormatError(serde_yaml::Error {{ .. }}), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 
@@ -97,9 +91,10 @@ mod tests {
     fn test_load_from_url_invalid_content() {
         let loader = SerdeYamlLoader::default();
         let load_result = mock_loader_request!(loader, "serde_yaml/Invalid.yaml");
-        if let Err(LoaderError::FormatError(serde_yaml::Error { .. })) = load_result {
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!("while parsing a node, did not find expected node content at line 2 column 1", &value);
         } else {
-            panic!("Expected LoaderError::FormatError(serde_yaml::Error {{ .. }}), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 

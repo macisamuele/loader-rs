@@ -1,22 +1,23 @@
 use crate::{Loader, LoaderError, LoaderTrait};
 use json;
 
-impl From<json::Error> for LoaderError<json::Error> {
+impl From<json::Error> for LoaderError {
     #[must_use]
+    #[inline(always)]
     fn from(value: json::Error) -> Self {
-        Self::FormatError(value)
+        Self::from(&value)
     }
 }
 
-impl LoaderTrait<json::JsonValue, json::Error> for Loader<json::JsonValue, json::Error> {
-    fn load_from_string(content: &str) -> Result<json::JsonValue, LoaderError<json::Error>>
+impl LoaderTrait<json::JsonValue> for Loader<json::JsonValue> {
+    fn load_from_string(content: &str) -> Result<json::JsonValue, LoaderError>
     where
         Self: Sized,
     {
         json::parse(content).or_else(|json_error| Err(json_error.into()))
     }
 
-    fn load_from_bytes(content: &[u8]) -> Result<json::JsonValue, LoaderError<json::Error>>
+    fn load_from_bytes(content: &[u8]) -> Result<json::JsonValue, LoaderError>
     where
         Self: Sized,
     {
@@ -88,9 +89,10 @@ mod tests {
     fn test_load_from_file_invalid_content() {
         let loader = JsonLoader::default();
         let load_result = loader.load(test_data_file_url("json/Invalid.json"));
-        if let Err(LoaderError::FormatError(json::Error::UnexpectedEndOfJson)) = load_result {
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!(value, json::Error::UnexpectedEndOfJson.to_string());
         } else {
-            panic!("Expected LoaderError::FormatError(json::Error::UnexpectedEndOfJson), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 
@@ -107,9 +109,10 @@ mod tests {
     fn test_load_from_url_invalid_content() {
         let loader = JsonLoader::default();
         let load_result = mock_loader_request!(loader, "json/Invalid.json");
-        if let Err(LoaderError::FormatError(json::Error::UnexpectedEndOfJson)) = load_result {
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!(value, json::Error::UnexpectedEndOfJson.to_string());
         } else {
-            panic!("Expected LoaderError::FormatError(json::Error::UnexpectedEndOfJson), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 

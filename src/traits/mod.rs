@@ -14,13 +14,13 @@ pub mod loaders {
     use crate::Loader;
 
     #[cfg(feature = "trait_json")]
-    pub type JsonLoader = Loader<json::JsonValue, json::Error>;
+    pub type JsonLoader = Loader<json::JsonValue>;
 
     #[cfg(feature = "trait_serde_json")]
-    pub type SerdeJsonLoader = Loader<serde_json::Value, serde_json::Error>;
+    pub type SerdeJsonLoader = Loader<serde_json::Value>;
 
     #[cfg(feature = "trait_serde_yaml")]
-    pub type SerdeYamlLoader = Loader<serde_yaml::Value, serde_yaml::Error>;
+    pub type SerdeYamlLoader = Loader<serde_yaml::Value>;
 
-    pub type RustTypeLoader = Loader<::json_trait_rs::RustType, ()>;
+    pub type RustTypeLoader = Loader<::json_trait_rs::RustType>;
 }

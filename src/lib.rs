@@ -51,7 +51,7 @@ use crate::{
     private::LoaderInternal,
     url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
 };
-use std::{io, marker::PhantomData, time::Duration};
+use std::{io, time::Duration};
 use url::Url;
 
 #[cfg(test)]
@@ -63,54 +63,67 @@ pub mod traits;
 pub mod url_helpers;
 
 use crate::arc_cache::ThreadSafeCache;
-use std::{fs::read, sync::Arc};
+use std::{
+    fmt::{Debug, Display},
+    fs::read,
+    sync::Arc,
+};
 pub use traits::loaders;
 
 #[derive(Debug, Display)]
-pub enum LoaderError<FE> {
+pub enum LoaderError {
     IOError(io::Error),
     InvalidURL(UrlError),
     FetchURLFailed(reqwest::Error),
-    FormatError(FE),
+    // We're not saving the real error instance, but only it's Display representation
+    // in order to simplify the interface of the LoaderTrait trait
+    FormatError(String),
     UnknownError,
 }
 
-impl<FE> From<io::Error> for LoaderError<FE> {
+impl<T: Display> From<&T> for LoaderError {
+    #[must_use]
+    fn from(error: &T) -> Self {
+        Self::FormatError(format!("{}", error))
+    }
+}
+
+impl From<io::Error> for LoaderError {
     #[must_use]
     fn from(error: io::Error) -> Self {
         Self::IOError(error)
     }
 }
 
-impl<FE> From<url::ParseError> for LoaderError<FE> {
+impl From<url::ParseError> for LoaderError {
     #[must_use]
     fn from(error: url::ParseError) -> Self {
         Self::InvalidURL(UrlError::ParseError(error))
     }
 }
 
-impl<FE> From<url::SyntaxViolation> for LoaderError<FE> {
+impl From<url::SyntaxViolation> for LoaderError {
     #[must_use]
     fn from(error: url::SyntaxViolation) -> Self {
         Self::InvalidURL(UrlError::SyntaxViolation(error))
     }
 }
 
-impl<FE> From<UrlError> for LoaderError<FE> {
+impl From<UrlError> for LoaderError {
     #[must_use]
     fn from(error: UrlError) -> Self {
         Self::InvalidURL(error)
     }
 }
 
-impl<FE> From<reqwest::Error> for LoaderError<FE> {
+impl From<reqwest::Error> for LoaderError {
     #[must_use]
     fn from(error: reqwest::Error) -> Self {
         Self::FetchURLFailed(error)
     }
 }
 
-impl<FE> Default for LoaderError<FE> {
+impl Default for LoaderError {
     #[inline]
     #[must_use]
     fn default() -> Self {
@@ -124,37 +137,31 @@ mod private {
     use std::sync::Arc;
     use url::Url;
 
-    pub trait LoaderInternal<T, FE>
-    where
-        LoaderError<FE>: From<FE>,
-    {
-        fn set(&self, url: &str, value: T) -> Result<(), LoaderError<FE>>;
-        fn internal_get_or_fetch_with_result<F>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>>
+    pub trait LoaderInternal<T> {
+        fn set(&self, url: &str, value: T) -> Result<(), LoaderError>;
+        fn internal_get_or_fetch_with_result<F>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError>
         where
-            F: FnOnce(&Url) -> Result<T, LoaderError<FE>>;
+            F: FnOnce(&Url) -> Result<T, LoaderError>;
     }
 }
 
-pub trait LoaderTrait<T, FE>: Default + LoaderInternal<T, FE>
-where
-    LoaderError<FE>: From<FE>,
-{
-    fn load_from_string(content: &str) -> Result<T, LoaderError<FE>>
+pub trait LoaderTrait<T>: Sized + LoaderInternal<T> {
+    fn load_from_string(content: &str) -> Result<T, LoaderError>
     where
         Self: Sized,
     {
         Self::load_from_bytes(content.as_bytes())
     }
 
-    fn load_from_bytes(content: &[u8]) -> Result<T, LoaderError<FE>>
+    fn load_from_bytes(content: &[u8]) -> Result<T, LoaderError>
     where
         Self: Sized;
 
-    fn load<R: AsRef<str>>(&self, url: R) -> Result<Arc<T>, LoaderError<FE>> {
+    fn load<R: AsRef<str>>(&self, url: R) -> Result<Arc<T>, LoaderError> {
         self.load_with_timeout(url, Duration::from_millis(30_000))
     }
 
-    fn load_with_timeout<R: AsRef<str>>(&self, url: R, timeout: Duration) -> Result<Arc<T>, LoaderError<FE>> {
+    fn load_with_timeout<R: AsRef<str>>(&self, url: R, timeout: Duration) -> Result<Arc<T>, LoaderError> {
         let url = parse_and_normalize_url(url)?;
 
         Ok(self.get_or_fetch_with_result(&normalize_url_for_cache(&url), |url_to_fetch| {
@@ -172,45 +179,33 @@ where
     }
 
     // This method is needed to extract internal_get_or_fetch_with_result from the internal trait
-    fn get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
+    fn get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError> {
         self.internal_get_or_fetch_with_result(key, fetcher)
     }
 }
 
 #[derive(Debug)]
-pub struct Loader<T, FE>
-where
-    LoaderError<FE>: From<FE>,
-{
+pub struct Loader<T> {
     cache: ThreadSafeCache<Url, T>,
-    format_error: PhantomData<FE>,
 }
 
-impl<T, FE> Default for Loader<T, FE>
-where
-    LoaderError<FE>: From<FE>,
-{
-    #[must_use]
+impl<T> Default for Loader<T> {
     fn default() -> Self {
         Self {
             cache: ThreadSafeCache::default(),
-            format_error: PhantomData,
         }
     }
 }
 
-impl<T, FE> LoaderInternal<T, FE> for Loader<T, FE>
-where
-    LoaderError<FE>: From<FE>,
-{
+impl<T> LoaderInternal<T> for Loader<T> {
     #[inline]
-    fn set(&self, url: &str, value: T) -> Result<(), LoaderError<FE>> {
+    fn set(&self, url: &str, value: T) -> Result<(), LoaderError> {
         self.cache.set(&normalize_url_for_cache(&parse_and_normalize_url(url)?), value);
         Ok(())
     }
 
     #[inline]
-    fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError<FE>>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError<FE>> {
+    fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError> {
         if let Some(value) = self.cache.get(key) {
             Ok(value)
         } else {
@@ -232,7 +227,7 @@ mod tests {
 
     #[test]
     fn test_default_loader_error() {
-        let loader_error_enum = LoaderError::<()>::default();
+        let loader_error_enum = LoaderError::default();
         if let LoaderError::UnknownError = loader_error_enum {
         } else {
             panic!("Expected LoaderError::UnknownError, received {:?}", loader_error_enum);
