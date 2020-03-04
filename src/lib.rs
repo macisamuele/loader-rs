@@ -62,7 +62,7 @@ mod arc_cache;
 pub mod traits;
 pub mod url_helpers;
 
-use crate::arc_cache::ThreadSafeCache;
+use crate::arc_cache::{ThreadSafeCacheImpl, ThreadSafeCacheTrait};
 use std::{
     fmt::{Debug, Display},
     fs::read,
@@ -185,13 +185,13 @@ pub trait LoaderTrait<T>: Sized + LoaderInternal<T> {
 
 #[derive(Debug)]
 pub struct Loader<T> {
-    cache: ThreadSafeCache<Url, T>,
+    cache: ThreadSafeCacheImpl<Url, T>,
 }
 
 impl<T> Default for Loader<T> {
     fn default() -> Self {
         Self {
-            cache: ThreadSafeCache::default(),
+            cache: ThreadSafeCacheImpl::default(),
         }
     }
 }
@@ -199,7 +199,7 @@ impl<T> Default for Loader<T> {
 impl<T> LoaderInternal<T> for Loader<T> {
     #[inline]
     fn set(&self, url: &str, value: T) -> Result<(), LoaderError> {
-        self.cache.set(&normalize_url_for_cache(&parse_and_normalize_url(url)?), value);
+        self.cache.set(&normalize_url_for_cache(&parse_and_normalize_url(url)?), Arc::new(value));
         Ok(())
     }
 
@@ -211,7 +211,7 @@ impl<T> LoaderInternal<T> for Loader<T> {
             match fetcher(key) {
                 Ok(fetched_value) => {
                     let arc_fetched_value = Arc::new(fetched_value);
-                    self.cache.set_arc(key, arc_fetched_value.clone());
+                    self.cache.set(key, arc_fetched_value.clone());
                     Ok(arc_fetched_value)
                 }
                 Err(loader_error) => Err(loader_error),
