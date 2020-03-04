@@ -10,19 +10,19 @@ impl From<json::Error> for LoaderError {
 }
 
 impl LoaderTrait<json::JsonValue> for Loader<json::JsonValue> {
-    fn load_from_string(content: &str) -> Result<json::JsonValue, LoaderError>
+    fn load_from_string(&self, content: &str) -> Result<json::JsonValue, LoaderError>
     where
         Self: Sized,
     {
         json::parse(content).or_else(|json_error| Err(json_error.into()))
     }
 
-    fn load_from_bytes(content: &[u8]) -> Result<json::JsonValue, LoaderError>
+    fn load_from_bytes(&self, content: &[u8]) -> Result<json::JsonValue, LoaderError>
     where
         Self: Sized,
     {
         match std::str::from_utf8(content) {
-            Ok(string_value) => Self::load_from_string(string_value),
+            Ok(string_value) => self.load_from_string(string_value),
             Err(_) => Err(json::Error::FailedUtf8Parsing.into()),
         }
     }

@@ -2,7 +2,7 @@ use crate::{Loader, LoaderError, LoaderTrait};
 use serde_json;
 
 impl LoaderTrait<serde_json::Value> for Loader<serde_json::Value> {
-    fn load_from_bytes(content: &[u8]) -> Result<serde_json::Value, LoaderError>
+    fn load_from_bytes(&self, content: &[u8]) -> Result<serde_json::Value, LoaderError>
     where
         Self: Sized,
     {

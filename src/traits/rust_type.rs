@@ -2,7 +2,7 @@ use crate::{Loader, LoaderError, LoaderTrait};
 use json_trait_rs::RustType;
 
 impl LoaderTrait<RustType> for Loader<RustType> {
-    fn load_from_bytes(content: &[u8]) -> Result<RustType, LoaderError>
+    fn load_from_bytes(&self, content: &[u8]) -> Result<RustType, LoaderError>
     where
         Self: Sized,
     {

@@ -6,7 +6,7 @@ use std::{
     sync::Arc,
 };
 
-pub(crate) trait ThreadSafeCacheTrait<K: Clone + Eq + Hash, V> {
+pub trait ThreadSafeCacheTrait<K: Clone + Eq + Hash, V> {
     fn set(&self, key: &K, value: Arc<V>);
     fn get(&self, key: &K) -> Option<Arc<V>>;
 }

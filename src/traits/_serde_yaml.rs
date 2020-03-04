@@ -2,7 +2,7 @@ use crate::{Loader, LoaderError, LoaderTrait};
 use serde_yaml;
 
 impl LoaderTrait<serde_yaml::Value> for Loader<serde_yaml::Value> {
-    fn load_from_bytes(content: &[u8]) -> Result<serde_yaml::Value, LoaderError>
+    fn load_from_bytes(&self, content: &[u8]) -> Result<serde_yaml::Value, LoaderError>
     where
         Self: Sized,
     {

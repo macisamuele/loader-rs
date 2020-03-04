@@ -47,13 +47,6 @@ extern crate strum_macros;
 #[macro_use]
 extern crate serde_json;
 
-use crate::{
-    private::LoaderInternal,
-    url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
-};
-use std::{io, time::Duration};
-use url::Url;
-
 #[cfg(test)]
 #[macro_use]
 mod macros;
@@ -62,13 +55,25 @@ mod arc_cache;
 pub mod traits;
 pub mod url_helpers;
 
-use crate::arc_cache::{ThreadSafeCacheImpl, ThreadSafeCacheTrait};
+pub use crate::traits::loaders;
+use crate::{
+    arc_cache::{ThreadSafeCacheImpl, ThreadSafeCacheTrait},
+    private::LoaderInternal,
+    url_helpers::{normalize_url_for_cache, parse_and_normalize_url, UrlError},
+};
+use lazy_static::lazy_static;
 use std::{
     fmt::{Debug, Display},
-    fs::read,
+    fs, io,
+    ops::Deref,
     sync::Arc,
+    time::Duration,
 };
-pub use traits::loaders;
+use url::Url;
+
+lazy_static! {
+    static ref DEFAULT_CLIENT: reqwest::blocking::Client = reqwest::blocking::Client::new();
+}
 
 #[derive(Debug, Display)]
 pub enum LoaderError {
@@ -133,29 +138,33 @@ impl Default for LoaderError {
 
 // Prevent users from implementing the LoaderInternal trait. (Idea extrapolated from libcore/slice/mod.rs)
 mod private {
-    use crate::LoaderError;
+    use crate::arc_cache::ThreadSafeCacheTrait;
     use std::sync::Arc;
     use url::Url;
 
     pub trait LoaderInternal<T> {
-        fn set(&self, url: &str, value: T) -> Result<(), LoaderError>;
-        fn internal_get_or_fetch_with_result<F>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError>
-        where
-            F: FnOnce(&Url) -> Result<T, LoaderError>;
+        fn cache(&self) -> &dyn ThreadSafeCacheTrait<Url, T>;
+
+        fn get_from_cache(&self, key: &Url) -> Option<Arc<T>> {
+            self.cache().get(key)
+        }
+
+        fn save_in_cache(&self, key: &Url, value: &Arc<T>) {
+            self.cache().set(key, value.clone())
+        }
     }
 }
 
-pub trait LoaderTrait<T>: Sized + LoaderInternal<T> {
-    fn load_from_string(content: &str) -> Result<T, LoaderError>
-    where
-        Self: Sized,
-    {
-        Self::load_from_bytes(content.as_bytes())
+pub trait LoaderTrait<T: Sized>: LoaderInternal<T> {
+    fn get_client(&self) -> &reqwest::blocking::Client {
+        DEFAULT_CLIENT.deref()
     }
 
-    fn load_from_bytes(content: &[u8]) -> Result<T, LoaderError>
-    where
-        Self: Sized;
+    fn load_from_string(&self, content: &str) -> Result<T, LoaderError> {
+        self.load_from_bytes(content.as_bytes())
+    }
+
+    fn load_from_bytes(&self, content: &[u8]) -> Result<T, LoaderError>;
 
     fn load(&self, url: &str) -> Result<Arc<T>, LoaderError> {
         self.load_with_timeout(url, Duration::from_millis(30_000))
@@ -164,22 +173,22 @@ pub trait LoaderTrait<T>: Sized + LoaderInternal<T> {
     fn load_with_timeout(&self, url: &str, timeout: Duration) -> Result<Arc<T>, LoaderError> {
         let url = parse_and_normalize_url(url)?;
 
-        Ok(self.get_or_fetch_with_result(&normalize_url_for_cache(&url), |url_to_fetch| {
-            // Value was not available on cache
-            if url_to_fetch.scheme() == "file" {
-                Self::load_from_bytes(read(url_to_fetch.to_file_path().unwrap())?.as_slice())
-            } else {
-                let client_builder = reqwest::blocking::Client::builder();
-                let client = client_builder.gzip(true).timeout(timeout).build()?;
-                let response = client.get(url_to_fetch.as_ref()).send()?.error_for_status()?;
-                Self::load_from_bytes(response.bytes()?.as_ref())
-            }
-        })?)
+        Ok(Arc::new(if url.scheme() == "file" {
+            self.load_from_bytes(fs::read(url.to_file_path().unwrap())?.as_slice())
+        } else {
+            self.load_from_bytes(self.get_client().get(url.as_ref()).timeout(timeout).send()?.error_for_status()?.bytes()?.as_ref())
+        }?))
     }
 
     // This method is needed to extract internal_get_or_fetch_with_result from the internal trait
-    fn get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError> {
-        self.internal_get_or_fetch_with_result(key, fetcher)
+    fn get_or_fetch_with_result(&self, key: &Url) -> Result<Arc<T>, LoaderError> {
+        if let Some(maybe_arc_value) = self.get_from_cache(key) {
+            Ok(maybe_arc_value)
+        } else {
+            let arc_value = self.load(key.as_str())?;
+            self.save_in_cache(&normalize_url_for_cache(key), &arc_value);
+            Ok(arc_value)
+        }
     }
 }
 
@@ -197,32 +206,14 @@ impl<T> Default for Loader<T> {
 }
 
 impl<T> LoaderInternal<T> for Loader<T> {
-    #[inline]
-    fn set(&self, url: &str, value: T) -> Result<(), LoaderError> {
-        self.cache.set(&normalize_url_for_cache(&parse_and_normalize_url(url)?), Arc::new(value));
-        Ok(())
-    }
-
-    #[inline]
-    fn internal_get_or_fetch_with_result<F: FnOnce(&Url) -> Result<T, LoaderError>>(&self, key: &Url, fetcher: F) -> Result<Arc<T>, LoaderError> {
-        if let Some(value) = self.cache.get(key) {
-            Ok(value)
-        } else {
-            match fetcher(key) {
-                Ok(fetched_value) => {
-                    let arc_fetched_value = Arc::new(fetched_value);
-                    self.cache.set(key, arc_fetched_value.clone());
-                    Ok(arc_fetched_value)
-                }
-                Err(loader_error) => Err(loader_error),
-            }
-        }
+    fn cache(&self) -> &dyn ThreadSafeCacheTrait<Url, T> {
+        &self.cache
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::LoaderError;
+    use crate::{Loader, LoaderError};
 
     #[test]
     fn test_default_loader_error() {
