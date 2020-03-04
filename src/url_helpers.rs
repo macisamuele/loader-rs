@@ -101,7 +101,6 @@ pub(crate) fn normalize_url_for_cache(url: &Url) -> Url {
     clone_url
 }
 
-#[allow(dead_code)]
 #[cfg(test)]
 pub(crate) fn test_data_file_path(path: &str) -> String {
     let repository_path = Path::new(file!()).canonicalize().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
@@ -117,10 +116,9 @@ pub(crate) fn test_data_file_path(path: &str) -> String {
     )
 }
 
-#[allow(dead_code)]
 #[cfg(test)]
 pub(crate) fn test_data_file_url(path: &str) -> String {
-    Url::from_file_path(dbg!(test_data_file_path(path))).unwrap().to_string()
+    Url::from_file_path(test_data_file_path(path)).unwrap().to_string()
 }
 
 #[cfg(test)]

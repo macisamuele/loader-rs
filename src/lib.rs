@@ -63,7 +63,7 @@ pub mod traits;
 pub mod url_helpers;
 
 use crate::arc_cache::ThreadSafeCache;
-use std::{fs::read, io::Read, sync::Arc};
+use std::{fs::read, sync::Arc};
 pub use traits::loaders;
 
 #[derive(Debug, Display)]
@@ -165,7 +165,7 @@ where
                 let client_builder = reqwest::blocking::Client::builder();
                 let client = client_builder.gzip(true).timeout(timeout).build()?;
                 let response = client.get(url_to_fetch.as_ref()).send()?.error_for_status()?;
-                response.bytes().filter_map(Result::ok).collect::<_>()
+                response.bytes()?.to_vec()
             };
             Self::load_from_bytes(bytes_content.as_slice())
         })?)
