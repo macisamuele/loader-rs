@@ -1,15 +1,8 @@
 use crate::{Loader, LoaderError, LoaderTrait};
 use json_trait_rs::RustType;
 
-impl From<()> for LoaderError<()> {
-    #[must_use]
-    fn from(_: ()) -> Self {
-        Self::FormatError(())
-    }
-}
-
-impl LoaderTrait<RustType, ()> for Loader<RustType, ()> {
-    fn load_from_bytes(content: &[u8]) -> Result<RustType, LoaderError<()>>
+impl LoaderTrait<RustType> for Loader<RustType> {
+    fn load_from_bytes(&self, content: &[u8]) -> Result<RustType, LoaderError>
     where
         Self: Sized,
     {
@@ -18,7 +11,7 @@ impl LoaderTrait<RustType, ()> for Loader<RustType, ()> {
         if string_content.is_empty() {
             Ok(RustType::Null)
         } else if "ERR" == string_content {
-            Err(().into())
+            Err(LoaderError::from(&"ERR"))
         } else if let Ok(value) = string_content.parse::<i32>() {
             Ok(RustType::from(value))
         } else if let Ok(value) = string_content.parse::<bool>() {
@@ -69,7 +62,7 @@ mod tests {
         let loader = RustTypeLoader::default();
         let mut non_exiting_file_url = test_data_file_url("testing/Null.txt");
         non_exiting_file_url.push_str("_not_existing");
-        let load_result = loader.load(non_exiting_file_url);
+        let load_result = loader.load(&non_exiting_file_url);
         if let Err(LoaderError::IOError(value)) = load_result {
             assert_eq!(value.kind(), io::ErrorKind::NotFound);
         } else {
@@ -83,16 +76,17 @@ mod tests {
     #[test_case("testing/String.txt", RustType::from("Some Text"))]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: RustType) {
         let loader = RustTypeLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
+        assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
     fn test_load_from_file_invalid_content() {
         let loader = RustTypeLoader::default();
-        let load_result = loader.load(test_data_file_url("testing/Invalid.txt"));
-        if let Err(LoaderError::FormatError(())) = load_result {
+        let load_result = loader.load(&test_data_file_url("testing/Invalid.txt"));
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!("ERR", &value);
         } else {
-            panic!("Expected LoaderError::FormatError(()), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 
@@ -109,9 +103,10 @@ mod tests {
     fn test_load_from_url_invalid_content() {
         let loader = RustTypeLoader::default();
         let load_result = mock_loader_request!(loader, "testing/Invalid.txt");
-        if let Err(LoaderError::FormatError(())) = load_result {
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!("ERR", &value);
         } else {
-            panic!("Expected LoaderError::FormatError(()), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 

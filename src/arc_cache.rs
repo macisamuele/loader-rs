@@ -6,9 +6,14 @@ use std::{
     sync::Arc,
 };
 
-pub(crate) struct ThreadSafeCache<K: Clone + Eq + Hash, V>(Mutex<UnboundCache<K, Arc<V>>>);
+pub trait ThreadSafeCacheTrait<K: Clone + Eq + Hash, V> {
+    fn set(&self, key: &K, value: Arc<V>);
+    fn get(&self, key: &K) -> Option<Arc<V>>;
+}
 
-impl<K: Clone + Eq + Hash, V> Debug for ThreadSafeCache<K, V> {
+pub(crate) struct ThreadSafeCacheImpl<K: Clone + Eq + Hash, V>(Mutex<UnboundCache<K, Arc<V>>>);
+
+impl<K: Clone + Eq + Hash, V> Debug for ThreadSafeCacheImpl<K, V> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         let cache_lock = self.0.lock();
         write!(
@@ -21,22 +26,18 @@ impl<K: Clone + Eq + Hash, V> Debug for ThreadSafeCache<K, V> {
     }
 }
 
-impl<K: Clone + Eq + Hash, V> Default for ThreadSafeCache<K, V> {
+impl<K: Clone + Eq + Hash, V> Default for ThreadSafeCacheImpl<K, V> {
     fn default() -> Self {
         Self(Mutex::new(UnboundCache::new()))
     }
 }
 
-impl<K: Clone + Eq + Hash, V> ThreadSafeCache<K, V> {
-    pub(crate) fn set(&self, key: &K, value: V) {
-        self.set_arc(key, Arc::new(value));
-    }
-
-    pub(crate) fn set_arc(&self, key: &K, value: Arc<V>) {
+impl<K: Clone + Eq + Hash, V> ThreadSafeCacheTrait<K, V> for ThreadSafeCacheImpl<K, V> {
+    fn set(&self, key: &K, value: Arc<V>) {
         self.0.lock().cache_set(key.clone(), value);
     }
 
-    pub(crate) fn get(&self, key: &K) -> Option<Arc<V>> {
+    fn get(&self, key: &K) -> Option<Arc<V>> {
         self.0.lock().cache_get(key).cloned()
     }
 }

@@ -66,11 +66,9 @@ fn get_invalid_fragment_part_according_to_json_pointer_rules(url: &Url) -> Optio
     }
 }
 
-pub(crate) fn parse_and_normalize_url<R: AsRef<str>>(url: R) -> Result<Url, UrlError> {
+pub(crate) fn parse_and_normalize_url(url: &str) -> Result<Url, UrlError> {
     let syntax_violations = RefCell::new(Vec::<SyntaxViolation>::new());
-    let mut url = Url::options()
-        .syntax_violation_callback(Some(&|v| syntax_violations.borrow_mut().push(v)))
-        .parse(url.as_ref())?;
+    let mut url = Url::options().syntax_violation_callback(Some(&|v| syntax_violations.borrow_mut().push(v))).parse(url)?;
     if let Some(violation) = syntax_violations.borrow().first() {
         return Err(Into::into(*violation));
     }

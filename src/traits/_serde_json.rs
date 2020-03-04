@@ -1,19 +1,12 @@
 use crate::{Loader, LoaderError, LoaderTrait};
 use serde_json;
 
-impl From<serde_json::Error> for LoaderError<serde_json::Error> {
-    #[must_use]
-    fn from(value: serde_json::Error) -> Self {
-        Self::FormatError(value)
-    }
-}
-
-impl LoaderTrait<serde_json::Value, serde_json::Error> for Loader<serde_json::Value, serde_json::Error> {
-    fn load_from_bytes(content: &[u8]) -> Result<serde_json::Value, LoaderError<serde_json::Error>>
+impl LoaderTrait<serde_json::Value> for Loader<serde_json::Value> {
+    fn load_from_bytes(&self, content: &[u8]) -> Result<serde_json::Value, LoaderError>
     where
         Self: Sized,
     {
-        serde_json::from_slice(content).or_else(|serde_error| Err(serde_error.into()))
+        serde_json::from_slice(content).or_else(|ref serde_error| Err(LoaderError::from(serde_error)))
     }
 }
 
@@ -57,7 +50,7 @@ mod tests {
         let loader = SerdeJsonLoader::default();
         let mut non_exiting_file_url = test_data_file_url("serde_json/Null.json");
         non_exiting_file_url.push_str("_not_existing");
-        let load_result = loader.load(non_exiting_file_url);
+        let load_result = loader.load(&non_exiting_file_url);
         if let Err(LoaderError::IOError(value)) = load_result {
             assert_eq!(value.kind(), io::ErrorKind::NotFound);
         } else {
@@ -71,16 +64,17 @@ mod tests {
     #[test_case("serde_json/String.json", json!["Some Text"])]
     fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: serde_json::Value) {
         let loader = SerdeJsonLoader::default();
-        assert_eq!(loader.load(test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
+        assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
 
     #[test]
     fn test_load_from_file_invalid_content() {
         let loader = SerdeJsonLoader::default();
-        let load_result = loader.load(test_data_file_url("serde_json/Invalid.json"));
-        if let Err(LoaderError::FormatError(serde_json::Error { .. })) = load_result {
+        let load_result = loader.load(&test_data_file_url("serde_json/Invalid.json"));
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!("EOF while parsing an object at line 2 column 0", &value);
         } else {
-            panic!("Expected LoaderError::FormatError(serde_json::Error {{ .. }}), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 
@@ -97,9 +91,10 @@ mod tests {
     fn test_load_from_url_invalid_content() {
         let loader = SerdeJsonLoader::default();
         let load_result = mock_loader_request!(loader, "serde_json/Invalid.json");
-        if let Err(LoaderError::FormatError(serde_json::Error { .. })) = load_result {
+        if let Err(LoaderError::FormatError(value)) = load_result {
+            assert_eq!("EOF while parsing an object at line 2 column 0", &value);
         } else {
-            panic!("Expected LoaderError::FormatError(serde_json::Error {{ .. }}), received {:?}", load_result);
+            panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
     }
 
