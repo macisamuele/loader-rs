@@ -166,15 +166,14 @@ pub trait LoaderTrait<T>: Sized + LoaderInternal<T> {
 
         Ok(self.get_or_fetch_with_result(&normalize_url_for_cache(&url), |url_to_fetch| {
             // Value was not available on cache
-            let bytes_content: Vec<u8> = if url_to_fetch.scheme() == "file" {
-                read(url_to_fetch.to_file_path().unwrap())?
+            if url_to_fetch.scheme() == "file" {
+                Self::load_from_bytes(read(url_to_fetch.to_file_path().unwrap())?.as_slice())
             } else {
                 let client_builder = reqwest::blocking::Client::builder();
                 let client = client_builder.gzip(true).timeout(timeout).build()?;
                 let response = client.get(url_to_fetch.as_ref()).send()?.error_for_status()?;
-                response.bytes()?.to_vec()
-            };
-            Self::load_from_bytes(bytes_content.as_slice())
+                Self::load_from_bytes(response.bytes()?.as_ref())
+            }
         })?)
     }
 
