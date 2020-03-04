@@ -34,7 +34,7 @@ test-case = "0"
 
 [dependencies]
 cached = "0"
-json-trait-rs = "^0.3"
+json-trait-rs = "0"
 json = { version = "0", optional = true }
 lazy_static = "1"
 parking_lot = "0"
