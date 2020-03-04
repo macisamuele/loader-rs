@@ -213,7 +213,7 @@ impl<T> LoaderInternal<T> for Loader<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Loader, LoaderError};
+    use crate::{Loader, LoaderError, LoaderTrait};
 
     #[test]
     fn test_default_loader_error() {
@@ -222,5 +222,21 @@ mod tests {
         } else {
             panic!("Expected LoaderError::UnknownError, received {:?}", loader_error_enum);
         }
+    }
+
+    #[test]
+    fn test_ensure_that_loader_can_be_made_into_an_object() {
+        impl LoaderTrait<u32> for Loader<u32> {
+            fn load_from_bytes(&self, _content: &[u8]) -> Result<u32, LoaderError> {
+                unimplemented!()
+            }
+        }
+
+        // The code will fail to compile if LoaderTrait cannot be made into an object
+        // Adding `fn foo() {}` into the trait will result into
+        // error[E0038]: the trait `LoaderTrait` cannot be made into an object
+        //     associated function `foo` has no `self` parameter
+        fn check<T>(_v: &dyn LoaderTrait<T>) {}
+        check(&Loader::<u32>::default())
     }
 }
