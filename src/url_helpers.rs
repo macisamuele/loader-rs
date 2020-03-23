@@ -67,30 +67,35 @@ fn get_invalid_fragment_part_according_to_json_pointer_rules(url: &Url) -> Optio
 }
 
 pub(crate) fn parse_and_normalize_url(url: &str) -> Result<Url, UrlError> {
-    let syntax_violations = RefCell::new(Vec::<SyntaxViolation>::new());
-    let mut url = Url::options().syntax_violation_callback(Some(&|v| syntax_violations.borrow_mut().push(v))).parse(url)?;
-    if let Some(violation) = syntax_violations.borrow().first() {
+    let mut maybe_syntax_violation: RefCell<Option<SyntaxViolation>> = RefCell::new(None);
+    let mut url = Url::options()
+        .syntax_violation_callback(Some(&|syntax_violation| {
+            maybe_syntax_violation.swap(&RefCell::new(Some(syntax_violation)));
+        }))
+        .parse(url)?;
+    if let Some(ref violation) = maybe_syntax_violation.get_mut() {
         return Err(Into::into(*violation));
     }
 
-    let cloned_url = url.clone();
-    let fragments = cloned_url.fragment().unwrap_or("").trim_end_matches('/');
-
-    let owned_fragment = if fragments.is_empty() {
+    let fragments = url.fragment().unwrap_or("").trim_end_matches('/');
+    let owned_fragments = if fragments.is_empty() {
         "/".to_string()
     } else if fragments.starts_with('/') {
         fragments.to_string()
     } else {
         format!("/{}", fragments)
     };
+    url.set_fragment(Some(owned_fragments.as_str()));
 
-    url.set_fragment(Some(owned_fragment.as_str()));
-
-    if let Some(invalid_fragment) = get_invalid_fragment_part_according_to_json_pointer_rules(&url) {
-        return Err(UrlError::JsonFragmentError(invalid_fragment));
+    if url.path().is_empty() {
+        url.set_path("/");
     }
 
-    Ok(url)
+    if let Some(invalid_fragment) = get_invalid_fragment_part_according_to_json_pointer_rules(&url) {
+        Err(UrlError::JsonFragmentError(invalid_fragment))
+    } else {
+        Ok(url)
+    }
 }
 
 pub(crate) fn normalize_url_for_cache(url: &Url) -> Url {
