@@ -33,10 +33,10 @@ mod test_loaders_do_implement_loader_trait {
     #[cfg(feature = "trait_serde_yaml")]
     use crate::traits::loaders::SerdeYamlLoader;
     use crate::{traits::loaders::RustTypeLoader, LoaderTrait};
-    use json_trait_rs::{JsonType, RustType};
+    use json_trait_rs::JsonType;
 
     #[allow(dead_code)]
-    fn check<T: JsonType<T> + Into<RustType>, L: LoaderTrait<T>>(_loader: &L) {}
+    fn check<T: JsonType, L: LoaderTrait<T>>(_loader: &L) {}
 
     #[cfg(feature = "trait_json")]
     #[test]
