@@ -66,7 +66,7 @@ fn get_invalid_fragment_part_according_to_json_pointer_rules(url: &Url) -> Optio
     }
 }
 
-pub(crate) fn parse_and_normalize_url(url: &str) -> Result<Url, UrlError> {
+pub(in crate) fn parse_and_normalize_url(url: &str) -> Result<Url, UrlError> {
     let mut maybe_syntax_violation: RefCell<Option<SyntaxViolation>> = RefCell::new(None);
     let mut url = Url::options()
         .syntax_violation_callback(Some(&|syntax_violation| {
@@ -98,14 +98,14 @@ pub(crate) fn parse_and_normalize_url(url: &str) -> Result<Url, UrlError> {
     }
 }
 
-pub(crate) fn normalize_url_for_cache(url: &Url) -> Url {
+pub(in crate) fn normalize_url_for_cache(url: &Url) -> Url {
     let mut clone_url = url.clone();
     clone_url.set_fragment(Some("/"));
     clone_url
 }
 
 #[cfg(test)]
-pub(crate) fn test_data_file_path(path: &str) -> String {
+pub(in crate) fn test_data_file_path(path: &str) -> String {
     let repository_path = Path::new(file!()).canonicalize().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
     String::from(
         path.split('/')
@@ -120,7 +120,7 @@ pub(crate) fn test_data_file_path(path: &str) -> String {
 }
 
 #[cfg(test)]
-pub(crate) fn test_data_file_url(path: &str) -> String {
+pub(in crate) fn test_data_file_url(path: &str) -> String {
     Url::from_file_path(test_data_file_path(path)).unwrap().to_string()
 }
 

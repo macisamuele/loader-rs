@@ -11,7 +11,7 @@ pub trait ThreadSafeCacheTrait<K: Clone + Eq + Hash, V> {
     fn get(&self, key: &K) -> Option<Arc<V>>;
 }
 
-pub(crate) struct ThreadSafeCacheImpl<K: Clone + Eq + Hash, V>(Mutex<UnboundCache<K, Arc<V>>>);
+pub(in crate) struct ThreadSafeCacheImpl<K: Clone + Eq + Hash, V>(Mutex<UnboundCache<K, Arc<V>>>);
 
 impl<K: Clone + Eq + Hash, V> Debug for ThreadSafeCacheImpl<K, V> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
