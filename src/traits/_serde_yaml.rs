@@ -1,5 +1,4 @@
 use crate::{Loader, LoaderError, LoaderTrait};
-use serde_yaml;
 
 impl LoaderTrait<serde_yaml::Value> for Loader<serde_yaml::Value> {
     fn load_from_bytes(&self, content: &[u8]) -> Result<serde_yaml::Value, LoaderError>
@@ -17,7 +16,6 @@ mod tests {
         url_helpers::{test_data_file_url, UrlError},
         LoaderError, LoaderTrait,
     };
-    use serde_yaml;
     use std::{io, sync::Arc};
     use test_case::test_case;
 
