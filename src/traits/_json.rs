@@ -1,5 +1,4 @@
 use crate::{Loader, LoaderError, LoaderTrait};
-use json;
 
 impl From<json::Error> for LoaderError {
     #[must_use]
@@ -35,7 +34,6 @@ mod tests {
         url_helpers::{test_data_file_url, UrlError},
         LoaderError, LoaderTrait,
     };
-    use json;
     use std::{io, sync::Arc};
     use test_case::test_case;
 

@@ -155,7 +155,7 @@ mod private {
     }
 }
 
-pub trait LoaderTrait<T: Sized>: LoaderInternal<T> {
+pub trait LoaderTrait<T: Sized>: Debug + LoaderInternal<T> {
     fn get_client(&self) -> &reqwest::blocking::Client {
         DEFAULT_CLIENT.deref()
     }
