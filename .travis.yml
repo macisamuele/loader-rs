@@ -12,7 +12,6 @@ env:
 matrix:
   include:
   - env: MAKE_TARGET=coverage
-  - env: MAKE_TARGET=test
   - env: MAKE_TARGET=doc
   - env: MAKE_TARGET=lint
     # Before updating this make sure that nighly-YYYY-MM-DD contains either rustfmt and clippy

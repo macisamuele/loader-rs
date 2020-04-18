@@ -7,9 +7,11 @@ pub mod _serde_json;
 #[cfg(feature = "trait_serde_yaml")]
 pub mod _serde_yaml;
 
+#[cfg(feature = "trait_json_trait_rs")]
 pub mod rust_type;
 
 pub mod loaders {
+    #[cfg(feature = "trait_json_trait_rs")]
     use crate::Loader;
 
     #[cfg(feature = "trait_json")]
@@ -21,10 +23,11 @@ pub mod loaders {
     #[cfg(feature = "trait_serde_yaml")]
     pub type SerdeYamlLoader = Loader<serde_yaml::Value>;
 
+    #[cfg(feature = "trait_json_trait_rs")]
     pub type RustTypeLoader = Loader<::json_trait_rs::RustType>;
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trait_json_trait_rs"))]
 mod test_loaders_do_implement_loader_trait {
     #[cfg(feature = "trait_json")]
     use crate::traits::loaders::JsonLoader;
@@ -35,7 +38,6 @@ mod test_loaders_do_implement_loader_trait {
     use crate::{traits::loaders::RustTypeLoader, LoaderTrait};
     use json_trait_rs::JsonType;
 
-    #[allow(dead_code)]
     fn check<T: JsonType, L: LoaderTrait<T>>(_loader: &L) {}
 
     #[cfg(feature = "trait_json")]
@@ -56,6 +58,7 @@ mod test_loaders_do_implement_loader_trait {
         check(&SerdeYamlLoader::default());
     }
 
+    #[cfg(feature = "trait_json_trait_rs")]
     #[test]
     fn test_rust_type_loader() {
         check(&RustTypeLoader::default());
