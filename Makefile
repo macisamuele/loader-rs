@@ -18,9 +18,9 @@ endif
 define call_all_features
 set -eu && \
     ( \
-        for cargo_args in "" --no-default-features; do CARGO_ARGS="${CARGO_ARGS} $${cargo_args}" ${MAKE} $(1); done; \
-        for feature in $$(bash ${CURDIR}/scripts/cargo-features.sh); do CARGO_ARGS="${CARGO_ARGS} --features '$${feature}'" ${MAKE} $(1); done; \
-        CARGO_ARGS="${CARGO_ARGS} --features '$$(bash ${CURDIR}/scripts/cargo-features.sh)'" ${MAKE} $(1); \
+        CARGO_ARGS=" --no-default-features" ${MAKE} $(1) && \
+        ${MAKE} $(1) && \
+        CARGO_ARGS=" --all-features" ${MAKE} $(1) \
     )
 endef
 
@@ -75,7 +75,7 @@ build-all-flavours:
 
 .PHONY: test
 test:
-	cargo +${RUST_TOOLCHAIN} test --all-targets ${CARGO_ARGS}
+	cargo +${RUST_TOOLCHAIN} test ${CARGO_ARGS}
 
 .PHONY: test-all-flavours
 test-all-flavours:

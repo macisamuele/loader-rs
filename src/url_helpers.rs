@@ -3,9 +3,6 @@ use regex::Regex;
 use std::cell::RefCell;
 use url::{ParseError, SyntaxViolation, Url};
 
-#[cfg(test)]
-use std::path::Path;
-
 #[derive(Clone, Debug, Display, PartialEq)]
 pub enum UrlError {
     ParseError(ParseError),
@@ -104,9 +101,9 @@ pub(in crate) fn normalize_url_for_cache(url: &Url) -> Url {
     clone_url
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trait_json_trait_rs"))]
 pub(in crate) fn test_data_file_path(path: &str) -> String {
-    let repository_path = Path::new(file!()).canonicalize().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
+    let repository_path = std::path::Path::new(file!()).canonicalize().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
     String::from(
         path.split('/')
             .collect::<Vec<_>>()
@@ -119,7 +116,7 @@ pub(in crate) fn test_data_file_path(path: &str) -> String {
     )
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "trait_json_trait_rs"))]
 pub(in crate) fn test_data_file_url(path: &str) -> String {
     Url::from_file_path(test_data_file_path(path)).unwrap().to_string()
 }
