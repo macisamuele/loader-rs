@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.6.0 (2020-04-18)
+------------------
+- Internal cache update, use `cached` instead of self-implemented solution - [PR #17](https://github.com/macisamuele/loader-rs/pull/17)
+- Remove FormatError generic type from `LoaderTrait`.
+- Miscellaneous updates
+
 0.5.0 (2020-01-13)
 ------------------
 - Support reqwest 0.10+ - [PR #14](https://github.com/macisamuele/loader-rs/pull/14)
