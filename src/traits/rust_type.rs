@@ -1,35 +1,45 @@
-use crate::{Loader, LoaderError, LoaderTrait};
+use crate::loader::{error::LoaderError, trait_::LoaderTrait, Loader};
+use json_trait_rs::RustType;
 
-impl LoaderTrait<json_trait_rs::RustType> for Loader<json_trait_rs::RustType> {
-    fn load_from_bytes(&self, content: &[u8]) -> Result<json_trait_rs::RustType, LoaderError>
+pub type RustTypeLoader = Loader<RustType>;
+
+impl LoaderTrait<RustType> for Loader<RustType> {
+    fn load_from_bytes(&self, content: &[u8]) -> Result<RustType, LoaderError>
     where
         Self: Sized,
     {
         let tm = String::from_utf8_lossy(content);
         let string_content = tm.trim();
         if string_content.is_empty() {
-            Ok(json_trait_rs::RustType::Null)
+            Ok(RustType::Null)
         } else if "ERR" == string_content {
             Err(LoaderError::from(&"ERR"))
         } else if let Ok(value) = string_content.parse::<i32>() {
-            Ok(json_trait_rs::RustType::from(value))
+            Ok(RustType::from(value))
         } else if let Ok(value) = string_content.parse::<bool>() {
-            Ok(json_trait_rs::RustType::from(value))
+            Ok(RustType::from(value))
         } else {
-            Ok(json_trait_rs::RustType::from(string_content))
+            Ok(RustType::from(string_content))
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::RustTypeLoader;
     use crate::{
-        traits::loaders::RustTypeLoader,
+        loader::{error::LoaderError, trait_::LoaderTrait},
+        traits::check_loader,
         url_helpers::{test_data_file_url, UrlError},
-        LoaderError, LoaderTrait,
     };
+    use json_trait_rs::RustType;
     use std::{io, sync::Arc};
     use test_case::test_case;
+
+    #[test]
+    fn test_is_loader() {
+        check_loader::<_, RustTypeLoader>()
+    }
 
     #[test]
     fn test_load_wrong_url_parse_error() {
@@ -68,11 +78,11 @@ mod tests {
         }
     }
 
-    #[test_case("testing/Boolean.txt", json_trait_rs::RustType::from(false))]
-    #[test_case("testing/Integer.txt", json_trait_rs::RustType::from(1))]
-    #[test_case("testing/Null.txt", json_trait_rs::RustType::from(()))]
-    #[test_case("testing/String.txt", json_trait_rs::RustType::from("Some Text"))]
-    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: json_trait_rs::RustType) {
+    #[test_case("testing/Boolean.txt", RustType::from(false))]
+    #[test_case("testing/Integer.txt", RustType::from(1))]
+    #[test_case("testing/Null.txt", RustType::from(()))]
+    #[test_case("testing/String.txt", RustType::from("Some Text"))]
+    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: RustType) {
         let loader = RustTypeLoader::default();
         assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
@@ -88,11 +98,11 @@ mod tests {
         }
     }
 
-    #[test_case("testing/Boolean.txt", json_trait_rs::RustType::from(false))]
-    #[test_case("testing/Integer.txt", json_trait_rs::RustType::from(1))]
-    #[test_case("testing/Null.txt", json_trait_rs::RustType::from(()))]
-    #[test_case("testing/String.txt", json_trait_rs::RustType::from("Some Text"))]
-    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: json_trait_rs::RustType) {
+    #[test_case("testing/Boolean.txt", RustType::from(false))]
+    #[test_case("testing/Integer.txt", RustType::from(1))]
+    #[test_case("testing/Null.txt", RustType::from(()))]
+    #[test_case("testing/String.txt", RustType::from("Some Text"))]
+    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: RustType) {
         let loader = RustTypeLoader::default();
         assert_eq!(mock_loader_request!(loader, file_path).unwrap(), Arc::new(expected_loaded_object));
     }

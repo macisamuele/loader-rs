@@ -1,7 +1,10 @@
-use crate::{Loader, LoaderError, LoaderTrait};
+use crate::loader::{error::LoaderError, trait_::LoaderTrait, Loader};
+use serde_json::Value;
 
-impl LoaderTrait<serde_json::Value> for Loader<serde_json::Value> {
-    fn load_from_bytes(&self, content: &[u8]) -> Result<serde_json::Value, LoaderError>
+pub type SerdeJsonLoader = Loader<Value>;
+
+impl LoaderTrait<Value> for Loader<Value> {
+    fn load_from_bytes(&self, content: &[u8]) -> Result<Value, LoaderError>
     where
         Self: Sized,
     {
@@ -11,13 +14,20 @@ impl LoaderTrait<serde_json::Value> for Loader<serde_json::Value> {
 
 #[cfg(test)]
 mod tests {
+    use super::SerdeJsonLoader;
     use crate::{
-        traits::loaders::SerdeJsonLoader,
+        loader::{error::LoaderError, trait_::LoaderTrait},
+        traits::check_loader,
         url_helpers::{test_data_file_url, UrlError},
-        LoaderError, LoaderTrait,
     };
+    use serde_json::Value;
     use std::{io, sync::Arc};
     use test_case::test_case;
+
+    #[test]
+    fn test_is_loader() {
+        check_loader::<_, SerdeJsonLoader>()
+    }
 
     #[test]
     fn test_load_wrong_url_parse_error() {
@@ -60,7 +70,7 @@ mod tests {
     #[test_case("serde_json/Integer.json", json![1])]
     #[test_case("serde_json/Null.json", json![null])]
     #[test_case("serde_json/String.json", json!["Some Text"])]
-    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: serde_json::Value) {
+    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: Value) {
         let loader = SerdeJsonLoader::default();
         assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
@@ -80,7 +90,8 @@ mod tests {
     #[test_case("serde_json/Integer.json", json![1])]
     #[test_case("serde_json/Null.json", json![null])]
     #[test_case("serde_json/String.json", json!["Some Text"])]
-    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: serde_json::Value) {
+    #[test_case("serde_json/Object.json", json![{"key": "Some Text"}])]
+    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: Value) {
         let loader = SerdeJsonLoader::default();
         assert_eq!(mock_loader_request!(loader, file_path).unwrap(), Arc::new(expected_loaded_object));
     }

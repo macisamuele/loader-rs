@@ -1,41 +1,58 @@
-use crate::{Loader, LoaderError, LoaderTrait};
+use crate::loader::{error::LoaderError, trait_::LoaderTrait, Loader};
+use json::{Error, JsonValue};
 
-impl From<json::Error> for LoaderError {
+pub type JsonLoader = Loader<JsonValue>;
+
+impl From<Error> for LoaderError {
     #[must_use]
-    #[inline(always)]
-    fn from(value: json::Error) -> Self {
+    fn from(value: Error) -> Self {
         Self::from(&value)
     }
 }
 
-impl LoaderTrait<json::JsonValue> for Loader<json::JsonValue> {
-    fn load_from_string(&self, content: &str) -> Result<json::JsonValue, LoaderError>
+impl LoaderTrait<JsonValue> for Loader<JsonValue> {
+    fn load_from_string(&self, content: &str) -> Result<JsonValue, LoaderError>
     where
         Self: Sized,
     {
         json::parse(content).or_else(|json_error| Err(json_error.into()))
     }
 
-    fn load_from_bytes(&self, content: &[u8]) -> Result<json::JsonValue, LoaderError>
+    fn load_from_bytes(&self, content: &[u8]) -> Result<JsonValue, LoaderError>
     where
         Self: Sized,
     {
         match std::str::from_utf8(content) {
             Ok(string_value) => self.load_from_string(string_value),
-            Err(_) => Err(json::Error::FailedUtf8Parsing.into()),
+            Err(_) => Err(Error::FailedUtf8Parsing.into()),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::JsonLoader;
     use crate::{
-        traits::loaders::JsonLoader,
+        loader::{error::LoaderError, trait_::LoaderTrait},
+        traits::check_loader,
         url_helpers::{test_data_file_url, UrlError},
-        LoaderError, LoaderTrait,
     };
+    use json::{Error, JsonValue};
     use std::{io, sync::Arc};
     use test_case::test_case;
+
+    #[test]
+    fn test_is_loader() {
+        check_loader::<_, JsonLoader>()
+    }
+
+    macro_rules! rust_json {
+        ($($json:tt)+) => {{
+            json::parse(
+                serde_json::to_string(&json![$($json)+]).unwrap().as_str(),
+            ).unwrap()
+        }};
+    }
 
     #[test]
     fn test_load_wrong_url_parse_error() {
@@ -78,7 +95,8 @@ mod tests {
     #[test_case("json/Integer.json", rust_json![1])]
     #[test_case("json/Null.json", rust_json![null])]
     #[test_case("json/String.json", rust_json!["Some Text"])]
-    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: json::JsonValue) {
+    #[test_case("json/Object.json", rust_json![{"key": "Some Text"}])]
+    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: JsonValue) {
         let loader = JsonLoader::default();
         assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
@@ -88,7 +106,7 @@ mod tests {
         let loader = JsonLoader::default();
         let load_result = loader.load(&test_data_file_url("json/Invalid.json"));
         if let Err(LoaderError::FormatError(value)) = load_result {
-            assert_eq!(value, json::Error::UnexpectedEndOfJson.to_string());
+            assert_eq!(value, Error::UnexpectedEndOfJson.to_string());
         } else {
             panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }
@@ -98,7 +116,7 @@ mod tests {
     #[test_case("json/Integer.json", rust_json![1])]
     #[test_case("json/Null.json", rust_json![null])]
     #[test_case("json/String.json", rust_json!["Some Text"])]
-    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: json::JsonValue) {
+    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: JsonValue) {
         let loader = JsonLoader::default();
         assert_eq!(mock_loader_request!(loader, file_path).unwrap(), Arc::new(expected_loaded_object));
     }
@@ -108,7 +126,7 @@ mod tests {
         let loader = JsonLoader::default();
         let load_result = mock_loader_request!(loader, "json/Invalid.json");
         if let Err(LoaderError::FormatError(value)) = load_result {
-            assert_eq!(value, json::Error::UnexpectedEndOfJson.to_string());
+            assert_eq!(value, Error::UnexpectedEndOfJson.to_string());
         } else {
             panic!("Expected LoaderError::FormatError(...), received {:?}", load_result);
         }

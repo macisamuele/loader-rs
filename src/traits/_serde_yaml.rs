@@ -1,7 +1,10 @@
-use crate::{Loader, LoaderError, LoaderTrait};
+use crate::loader::{error::LoaderError, trait_::LoaderTrait, Loader};
+use serde_yaml::Value;
 
-impl LoaderTrait<serde_yaml::Value> for Loader<serde_yaml::Value> {
-    fn load_from_bytes(&self, content: &[u8]) -> Result<serde_yaml::Value, LoaderError>
+pub type SerdeYamlLoader = Loader<Value>;
+
+impl LoaderTrait<Value> for Loader<Value> {
+    fn load_from_bytes(&self, content: &[u8]) -> Result<Value, LoaderError>
     where
         Self: Sized,
     {
@@ -12,12 +15,26 @@ impl LoaderTrait<serde_yaml::Value> for Loader<serde_yaml::Value> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        traits::loaders::SerdeYamlLoader,
+        loader::{error::LoaderError, trait_::LoaderTrait},
+        traits::{check_loader, loaders::SerdeYamlLoader},
         url_helpers::{test_data_file_url, UrlError},
-        LoaderError, LoaderTrait,
     };
+    use serde_yaml::Value;
     use std::{io, sync::Arc};
     use test_case::test_case;
+
+    macro_rules! yaml {
+        ($($json:tt)+) => {{
+            serde_yaml::from_str(
+                serde_json::to_string(&json![$($json)+]).unwrap().as_str(),
+            ).unwrap()
+        }};
+    }
+
+    #[test]
+    fn test_is_loader() {
+        check_loader::<_, SerdeYamlLoader>()
+    }
 
     #[test]
     fn test_load_wrong_url_parse_error() {
@@ -60,7 +77,8 @@ mod tests {
     #[test_case("serde_yaml/Integer.yaml", yaml![1])]
     #[test_case("serde_yaml/Null.yaml", yaml![null])]
     #[test_case("serde_yaml/String.yaml", yaml!["Some Text"])]
-    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: serde_yaml::Value) {
+    #[test_case("serde_yaml/Object.yaml", yaml![{"key": "Some Text"}])]
+    fn test_load_from_file_valid_content(file_path: &str, expected_loaded_object: Value) {
         let loader = SerdeYamlLoader::default();
         assert_eq!(loader.load(&test_data_file_url(file_path)).ok().unwrap(), Arc::new(expected_loaded_object));
     }
@@ -80,7 +98,7 @@ mod tests {
     #[test_case("serde_yaml/Integer.yaml", yaml![1])]
     #[test_case("serde_yaml/Null.yaml", yaml![null])]
     #[test_case("serde_yaml/String.yaml", yaml!["Some Text"])]
-    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: serde_yaml::Value) {
+    fn test_load_from_url_valid_content(file_path: &str, expected_loaded_object: Value) {
         let loader = SerdeYamlLoader::default();
         assert_eq!(mock_loader_request!(loader, file_path).unwrap(), Arc::new(expected_loaded_object));
     }
