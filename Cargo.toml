@@ -22,10 +22,11 @@ all-features = true
 
 [features]
 default = []
-trait_json_trait_rs = ["json-trait-rs"]
-trait_json = ["json", "json-trait-rs/trait_json", "trait_json_trait_rs"]
-trait_serde_json = ["serde_json", "json-trait-rs/trait_serde_json", "trait_json_trait_rs"]
-trait_serde_yaml = ["serde_yaml", "json-trait-rs/trait_serde_yaml", "trait_json_trait_rs"]
+json-loader = ["json-trait-rs"]
+trait_json_trait_rs = ["json-loader"]
+trait_json = ["json-loader", "json", "json-trait-rs/trait_json"]
+trait_serde_json = ["json-loader", "serde_json", "json-trait-rs/trait_serde_json"]
+trait_serde_yaml = ["json-loader", "serde_yaml", "json-trait-rs/trait_serde_yaml"]
 regular_expression = ["regex"]
 
 [dev-dependencies]

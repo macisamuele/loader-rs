@@ -7,7 +7,7 @@ macro_rules! mock_loader_request {
         use url::Url;
 
         let abs_file_path = test_data_file_path($file_path);
-        let url_path = String::from(url::Url::parse(&test_data_file_url($file_path)).unwrap().path());
+        let url_path = test_data_file_url($file_path).path().to_string();
         let mocked_request = mock("GET", url_path.as_str())
             .with_status($status_code)
             .with_header("content-type", $content_type)
