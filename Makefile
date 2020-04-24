@@ -62,8 +62,8 @@ pre-commit: venv
 	./venv/bin/pre-commit run --all-files
 
 .PHONY: lint
-lint: pre-commit clippy
-	$(call call_all_features,clippy)
+lint: pre-commit clippy-all-flavours
+	@true
 
 .PHONY: build
 build:

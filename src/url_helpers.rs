@@ -101,11 +101,22 @@ pub(in crate) fn normalize_url_for_cache(url: &Url) -> Url {
     clone_url
 }
 
-#[cfg(all(test, feature = "trait_json_trait_rs"))]
+#[allow(dead_code)]
+#[cfg(test)]
+fn defrag_file_path(path: &str) -> String {
+    path.match_indices('#')
+        .collect::<Vec<_>>()
+        .first()
+        .map_or_else(|| path.to_string(), |(index, _)| path[0..*index].to_string())
+}
+
+#[allow(dead_code)]
+#[cfg(test)]
 pub(in crate) fn test_data_file_path(path: &str) -> String {
     let repository_path = std::path::Path::new(file!()).canonicalize().unwrap().parent().unwrap().parent().unwrap().to_path_buf();
     String::from(
-        path.split('/')
+        defrag_file_path(path)
+            .split('/')
             .collect::<Vec<_>>()
             .iter()
             .fold(repository_path.join("test-data"), |iter_path, &path_path| iter_path.join(path_path))
@@ -116,9 +127,16 @@ pub(in crate) fn test_data_file_path(path: &str) -> String {
     )
 }
 
-#[cfg(all(test, feature = "trait_json_trait_rs"))]
-pub(in crate) fn test_data_file_url(path: &str) -> String {
-    Url::from_file_path(test_data_file_path(path)).unwrap().to_string()
+#[allow(dead_code)]
+#[cfg(test)]
+pub(in crate) fn test_data_file_url(path: &str) -> Url {
+    let mut url = Url::from_file_path(test_data_file_path(path)).unwrap();
+    if path.contains('#') {
+        // A fragment is present
+        let defrag_path = defrag_file_path(path);
+        url.set_fragment(Some(&path[defrag_path.len() + 1..]));
+    }
+    url
 }
 
 #[cfg(test)]

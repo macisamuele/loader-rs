@@ -6,11 +6,13 @@ use std::{
     sync::Arc,
 };
 
+#[allow(clippy::module_name_repetitions)]
 pub trait ThreadSafeCacheTrait<K: Clone + Eq + Hash, V> {
     fn set(&self, key: &K, value: Arc<V>);
     fn get(&self, key: &K) -> Option<Arc<V>>;
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub(in crate) struct ThreadSafeCacheImpl<K: Clone + Eq + Hash, V>(Mutex<UnboundCache<K, Arc<V>>>);
 
 impl<K: Clone + Eq + Hash, V> Debug for ThreadSafeCacheImpl<K, V> {
