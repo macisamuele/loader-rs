@@ -38,8 +38,7 @@
 )]
 // This is not great, but the library is not stable enough to write documentation
 #![allow(clippy::missing_errors_doc)]
-// Ignore missing_const_for_fn clippy linter (it's too noisy in regards const fn in traits)
-#![allow(clippy::missing_const_for_fn)]
+// Specialization needed in order to accommodate partial LoaderTrait implementation for ConcreteJsonLoader
 #![feature(specialization)]
 
 #[macro_use]

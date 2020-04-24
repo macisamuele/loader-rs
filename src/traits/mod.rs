@@ -7,7 +7,7 @@ mod _serde_json;
 #[cfg(feature = "trait_serde_yaml")]
 mod _serde_yaml;
 
-#[cfg(feature = "trait_json_trait_rs")]
+#[cfg(feature = "json-loader")]
 mod rust_type;
 
 #[cfg(all(test, feature = "json-loader"))]
@@ -26,7 +26,7 @@ pub mod loaders {
     #[cfg(feature = "trait_serde_yaml")]
     pub use super::_serde_yaml::SerdeYamlLoader;
 
-    #[cfg(feature = "trait_json_trait_rs")]
+    #[cfg(feature = "json-loader")]
     pub use super::rust_type::RustTypeLoader;
 }
 
