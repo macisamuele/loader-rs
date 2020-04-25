@@ -26,7 +26,6 @@
     unused_doc_comments,
     unused_extern_crates,
     unused_extern_crates,
-    unused_import_braces,
     unused_imports,
     unused_macros,
     unused_parens,
@@ -41,6 +40,10 @@
 // Specialization needed in order to accommodate partial LoaderTrait implementation for ConcreteJsonLoader
 #![feature(specialization)]
 
+#[cfg(test)]
+#[macro_use]
+extern crate derive_builder;
+
 #[macro_use]
 extern crate strum_macros;
 #[cfg(all(test, any(feature = "trait_json", feature = "trait_serde_json", feature = "trait_serde_yaml")))]
@@ -48,8 +51,7 @@ extern crate strum_macros;
 extern crate serde_json;
 
 #[cfg(test)]
-#[macro_use]
-mod macros;
+mod testing_helpers;
 
 #[cfg(feature = "json-loader")]
 pub mod json;
