@@ -57,15 +57,14 @@ mod tests {
 
     #[test]
     fn test_load_invalid_content() {
-        match MockLoaderRequestBuilder::default()
-            .resp_body_file_path(vec!["serde_yaml", "Invalid.yaml"])
-            .build()
-            .unwrap()
-            .send_request(&SerdeYamlLoader::default())
-            .unwrap_err()
-        {
-            LoaderError::FormatError(value) => assert_eq!("while parsing a node, did not find expected node content at line 2 column 1", &value),
-            loader_error => panic!("Expected LoaderError::FormatError(...), received {:?}", loader_error),
-        }
+        assert!(matches!(
+            MockLoaderRequestBuilder::default()
+                .resp_body_file_path(vec!["serde_yaml", "Invalid.yaml"])
+                .build()
+                .unwrap()
+                .send_request(&SerdeYamlLoader::default())
+                .unwrap_err(),
+            LoaderError::FormatError(value) if "while parsing a node, did not find expected node content at line 2 column 1" == &value
+        ));
     }
 }

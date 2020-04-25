@@ -68,10 +68,6 @@ mod tests {
 
     #[test]
     fn test_default_loader_error() {
-        let loader_error_enum = LoaderError::default();
-        if let LoaderError::UnknownError = loader_error_enum {
-        } else {
-            panic!("Expected LoaderError::UnknownError, received {:?}", loader_error_enum);
-        }
+        assert!(matches!(LoaderError::default(), LoaderError::UnknownError));
     }
 }
