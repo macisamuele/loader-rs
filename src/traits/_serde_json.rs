@@ -49,15 +49,14 @@ mod tests {
 
     #[test]
     fn test_load_invalid_content() {
-        match MockLoaderRequestBuilder::default()
-            .resp_body_file_path(vec!["serde_json", "Invalid.json"])
-            .build()
-            .unwrap()
-            .send_request(&SerdeJsonLoader::default())
-            .unwrap_err()
-        {
-            LoaderError::FormatError(value) => assert_eq!("EOF while parsing an object at line 2 column 0", &value),
-            loader_error => panic!("Expected LoaderError::FormatError(...), received {:?}", loader_error),
-        }
+        assert!(matches!(
+            MockLoaderRequestBuilder::default()
+                .resp_body_file_path(vec!["serde_json", "Invalid.json"])
+                .build()
+                .unwrap()
+                .send_request(&SerdeJsonLoader::default())
+                .unwrap_err(),
+            LoaderError::FormatError(value) if "EOF while parsing an object at line 2 column 0" == &value
+        ));
     }
 }

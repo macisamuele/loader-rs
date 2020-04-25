@@ -58,15 +58,14 @@ mod tests {
 
     #[test]
     fn test_load_invalid_content() {
-        match MockLoaderRequestBuilder::default()
-            .resp_body_file_path(vec!["rust_type", "Invalid.txt"])
-            .build()
-            .unwrap()
-            .send_request(&RustTypeLoader::default())
-            .unwrap_err()
-        {
-            LoaderError::FormatError(value) => assert_eq!("ERR", &value),
-            loader_error => panic!("Expected LoaderError::FormatError(...), received {:?}", loader_error),
-        }
+        assert!(matches!(
+            MockLoaderRequestBuilder::default()
+                .resp_body_file_path(vec!["rust_type", "Invalid.txt"])
+                .build()
+                .unwrap()
+                .send_request(&RustTypeLoader::default())
+                .unwrap_err(),
+            LoaderError::FormatError(value) if "ERR" == &value
+        ));
     }
 }

@@ -107,23 +107,22 @@ mod tests {
         let mut non_exiting_file_url = Url::from_file_path(test_data_file_path(&["empty"]).unwrap().as_path()).unwrap().to_string();
         non_exiting_file_url.push_str("_not_existing");
 
-        match TestStringLoader::default().load(&non_exiting_file_url).unwrap_err() {
-            LoaderError::IOError(value) => assert_eq!(value.kind(), std::io::ErrorKind::NotFound),
-            loader_error => panic!("Expected LoaderError::IOError(...), received {:?}", loader_error),
-        }
+        assert!(matches!(
+            TestStringLoader::default().load(&non_exiting_file_url).unwrap_err(),
+            LoaderError::IOError(value) if value.kind() == std::io::ErrorKind::NotFound
+        ));
     }
 
     #[test]
     fn test_load_from_not_existing_url() {
-        match MockLoaderRequestBuilder::default()
-            .resp_status_code(404)
-            .build()
-            .unwrap()
-            .send_request(&TestStringLoader::default())
-            .unwrap_err()
-        {
-            LoaderError::FetchURLFailed(value) => assert_eq!(value.status().map(|value| value.as_u16()), Some(404)),
-            loader_error => panic!("Expected LoaderError::FetchURLFailed(...), received {:?}", loader_error),
-        }
+        assert!(matches!(
+            MockLoaderRequestBuilder::default()
+                .resp_status_code(404)
+                .build()
+                .unwrap()
+                .send_request(&TestStringLoader::default())
+                .unwrap_err(),
+            LoaderError::FetchURLFailed(value) if value.status().map(|value| value.as_u16()) == Some(404)
+        ));
     }
 }
