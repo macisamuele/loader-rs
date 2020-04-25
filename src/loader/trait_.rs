@@ -1,6 +1,6 @@
 use crate::loader::error::LoaderError;
 use reqwest::blocking::Client;
-use std::{sync::Arc, time::Duration};
+use std::{fmt::Debug, sync::Arc, time::Duration};
 use url::Url;
 
 use crate::{
@@ -23,7 +23,7 @@ fn remove_fragment_from_url(url: &Url) -> Url {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub trait LoaderTrait<T>: GetClient<T> + GetCache<T> {
+pub trait LoaderTrait<T>: Debug + GetClient<T> + GetCache<T> {
     fn get_from_cache(&self, key: &Url) -> Option<Arc<T>> {
         self.get_cache().get(key)
     }
