@@ -35,6 +35,8 @@
     unused_variables,
     warnings,
 )]
+// Enable very pendantic clippy linting
+#![deny(clippy::pedantic, clippy::nursery)]
 // This is not great, but the library is not stable enough to write documentation
 #![allow(clippy::missing_errors_doc)]
 // Specialization needed in order to accommodate partial LoaderTrait implementation for ConcreteJsonLoader
