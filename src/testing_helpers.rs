@@ -1,8 +1,8 @@
+#[cfg(test)]
 use crate::{LoaderError, LoaderTrait};
-use std::{
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::path::{Path, PathBuf};
+#[cfg(test)]
+use std::sync::Arc;
 use url::Url;
 
 pub(in crate) fn test_data_file_path(path_components: &[&str]) -> Result<PathBuf, std::io::Error> {
@@ -29,7 +29,11 @@ fn validate_builder(value: &MockLoaderRequestBuilder) -> Result<(), String> {
 #[derive(Debug, Builder)]
 #[builder(build_fn(validate = "validate_builder"))]
 #[builder(setter(strip_option))]
-pub(in crate) struct MockLoaderRequest {
+pub struct MockLoaderRequest {
+    #[builder(default = "true")]
+    ensure_mock_calls: bool,
+    #[builder(default = "1")]
+    expected_mock_calls: usize,
     #[builder(default = "\"/\".to_string()")]
     #[builder(setter(into))]
     http_path: String,
@@ -37,6 +41,7 @@ pub(in crate) struct MockLoaderRequest {
     #[builder(setter(into))]
     http_verb: String,
     #[builder(default = "None")]
+    #[builder(setter(into))]
     resp_content_type: Option<String>,
     #[builder(default = "200")]
     resp_status_code: usize,
@@ -71,21 +76,31 @@ impl MockLoaderRequest {
         mocked_request_builder.create()
     }
 
-    pub(in crate) fn send_request<T, L: LoaderTrait<T>>(&self, loader: &L) -> Result<Arc<T>, LoaderError> {
+    pub fn run_in_mock_context<R>(&self, callback: &dyn Fn(&Url) -> R) -> R {
         let mocked_request = self.build_mock_request();
 
         let url = Url::parse(&mockito::server_url()).and_then(|url| url.join(&self.http_path)).unwrap();
 
-        let value = loader.get_or_fetch_with_result(&url);
-        mocked_request.expect(1).assert();
+        let value = callback(&url);
+
+        if self.ensure_mock_calls {
+            mocked_request.expect(self.expected_mock_calls).assert();
+        }
         value
+    }
+
+    #[cfg(test)]
+    pub(in crate) fn send_request<T, L: LoaderTrait<T>>(&self, loader: &L) -> Result<Arc<T>, LoaderError> {
+        self.run_in_mock_context(&|url| loader.get_or_fetch_with_result(url))
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::MockLoaderRequestBuilder;
-    use crate::loader::testing::TestStringLoader;
+    use crate::loader::{testing::TestStringLoader, trait_::LoaderTrait};
     use std::sync::Arc;
+    use test_case::test_case;
 
     #[test]
     fn test_mock_loader_request_resp_body() {
@@ -119,5 +134,44 @@ mod tests {
                 .unwrap(),
             Arc::new("".to_string()),
         );
+    }
+
+    #[test_case(true => panics "Expected 1 request")]
+    #[test_case(false)]
+    fn test_mock_loader_honors_ensure_mock_calls(ensure_mock_calls: bool) {
+        MockLoaderRequestBuilder::default()
+            .ensure_mock_calls(ensure_mock_calls)
+            .resp_body("")
+            .build()
+            .unwrap()
+            .run_in_mock_context(&|_url| {
+                // Not using the _url as we want to ensure that no requests are issued to the mock
+            });
+    }
+
+    #[test_case(0 => panics "Expected 0 request")]
+    #[test_case(1)]
+    #[test_case(2 => panics "Expected 2 request")]
+    fn test_mock_loader_honors_expected_mock_calls(expected_mock_calls: usize) {
+        MockLoaderRequestBuilder::default()
+            .expected_mock_calls(expected_mock_calls)
+            .resp_body("")
+            .build()
+            .unwrap()
+            .run_in_mock_context(&|url| {
+                let _ = TestStringLoader::default().load(url.as_str());
+            });
+    }
+
+    #[test]
+    fn test_mock_loader_ensure_test_not_called() {
+        MockLoaderRequestBuilder::default()
+            .expected_mock_calls(0)
+            .resp_body("")
+            .build()
+            .unwrap()
+            .run_in_mock_context(&|_url| {
+                // Not using the _url as we want to ensure that no requests are issued to the mock
+            });
     }
 }
