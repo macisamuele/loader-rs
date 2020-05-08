@@ -63,7 +63,7 @@ mod tests {
         assert_eq!(
             &*MockLoaderRequestBuilder::default()
                 .http_path(format!("/#{}", fragment))
-                .resp_body_file_path(vec!["json", file_name])
+                .resp_body_file_path(vec![file_name])
                 .build()
                 .unwrap()
                 .send_request(&JsonLoader::default())
@@ -76,7 +76,7 @@ mod tests {
     fn test_load_invalid_content() {
         assert!(matches!(
             MockLoaderRequestBuilder::default()
-                .resp_body_file_path(vec!["json", "Invalid.json"])
+                .resp_body_file_path(vec!["Invalid.json"])
                 .build()
                 .unwrap()
                 .send_request(&JsonLoader::default())
