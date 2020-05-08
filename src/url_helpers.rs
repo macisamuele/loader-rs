@@ -52,17 +52,17 @@ pub(in crate) fn parse_and_normalize_url(url: &str) -> Result<Url, UrlError> {
     Ok(url)
 }
 
-pub(in crate) fn normalize_url_for_cache(url: &Url) -> Url {
-    let mut clone_url = url.clone();
-    clone_url.set_fragment(Some("/"));
-    clone_url
+pub(in crate) fn remove_fragment_from_url(url: &Url) -> Url {
+    let mut fragment_less_key = url.clone();
+    fragment_less_key.set_fragment(None);
+    fragment_less_key
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_and_normalize_url, UrlError};
+    use super::{parse_and_normalize_url, remove_fragment_from_url, UrlError};
     use test_case::test_case;
-    use url::{ParseError, SyntaxViolation};
+    use url::{ParseError, SyntaxViolation, Url};
 
     #[test_case("memory://", "memory:///#/" ; "url_with_no_path_no_fragment")]
     #[test_case("memory://#", "memory:///#/" ; "url_with_no_path")]
@@ -82,5 +82,12 @@ mod tests {
     #[test_case("http:/example", &UrlError::SyntaxViolation(SyntaxViolation::ExpectedDoubleSlash))]
     fn test_parse_and_normalize_url_invalid_case(url_str: &str, expected_err: &UrlError) {
         assert_eq!(&parse_and_normalize_url(url_str).unwrap_err(), expected_err);
+    }
+
+    #[test_case("memory0:///" => "memory0:///")]
+    #[test_case("memory1:///#" => "memory1:///")]
+    #[test_case("memory2:///#/fragment" => "memory2:///")]
+    fn test_remove_fra(url_str: &str) -> String {
+        remove_fragment_from_url(&Url::parse(url_str).unwrap()).to_string()
     }
 }

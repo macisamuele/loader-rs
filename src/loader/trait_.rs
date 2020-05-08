@@ -5,7 +5,7 @@ use url::Url;
 
 use crate::{
     thread_safe_cache::ThreadSafeCacheTrait,
-    url_helpers::{normalize_url_for_cache, parse_and_normalize_url},
+    url_helpers::{parse_and_normalize_url, remove_fragment_from_url},
 };
 
 pub trait GetCache<T> {
@@ -14,12 +14,6 @@ pub trait GetCache<T> {
 
 pub trait GetClient<T> {
     fn get_client(&self) -> &Client;
-}
-
-fn remove_fragment_from_url(url: &Url) -> Url {
-    let mut fragment_less_key = url.clone();
-    fragment_less_key.set_fragment(None);
-    fragment_less_key
 }
 
 #[allow(clippy::module_name_repetitions)]
@@ -58,7 +52,7 @@ pub trait LoaderTrait<T>: Debug + GetClient<T> + GetCache<T> {
             arc_value
         } else {
             let arc_value = self.load(key.as_str())?;
-            self.save_in_cache(&normalize_url_for_cache(fragmentless_url), &arc_value);
+            self.save_in_cache(fragmentless_url, &arc_value);
             arc_value
         };
         if let Some(fragment) = key.fragment() {
