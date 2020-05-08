@@ -7,7 +7,7 @@ mod _serde_json;
 #[cfg(feature = "trait_serde_yaml")]
 mod _serde_yaml;
 
-#[cfg(feature = "json-loader")]
+#[cfg(all(feature = "json-loader", feature = "testing-helpers"))]
 mod rust_type;
 
 #[cfg(all(test, feature = "json-loader"))]
@@ -26,7 +26,10 @@ pub mod loaders {
     #[cfg(feature = "trait_serde_yaml")]
     pub use super::_serde_yaml::SerdeYamlLoader;
 
-    #[cfg(feature = "json-loader")]
+    // RustTypeLoader is exposed only if testing-helpers feature is enabled
+    // because the Loader depends on serde_json loading capabilities (which for
+    // example are not able to cover the i128 case, but for testing is good enough)
+    #[cfg(all(feature = "json-loader", feature = "testing-helpers"))]
     pub use super::rust_type::RustTypeLoader;
 }
 

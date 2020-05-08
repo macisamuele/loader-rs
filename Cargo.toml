@@ -22,7 +22,7 @@ all-features = true
 
 [features]
 default = []
-testing-helpers = ["derive_builder", "mockito"]
+testing-helpers = ["derive_builder", "mockito", "serde_json", "json-trait-rs/trait_serde_json"]
 json-loader = ["json-trait-rs"]
 trait_json = ["json-loader", "json", "json-trait-rs/trait_json"]
 trait_serde_json = ["json-loader", "serde_json", "json-trait-rs/trait_serde_json"]
