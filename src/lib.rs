@@ -42,7 +42,7 @@
 // Specialization needed in order to accommodate partial LoaderTrait implementation for ConcreteJsonLoader
 #![feature(specialization)]
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing-helpers"))]
 #[macro_use]
 extern crate derive_builder;
 
@@ -52,8 +52,8 @@ extern crate strum_macros;
 #[macro_use]
 extern crate serde_json;
 
-#[cfg(test)]
-mod testing_helpers;
+#[cfg(any(test, feature = "testing-helpers"))]
+pub mod testing_helpers;
 
 #[cfg(feature = "json-loader")]
 pub mod json;
