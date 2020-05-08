@@ -47,7 +47,7 @@ mod tests {
     fn test_load_valid_content(file_name: &'static str, expected_loaded_object: &RustType) {
         assert_eq!(
             &*MockLoaderRequestBuilder::default()
-                .resp_body_file_path(vec!["rust_type", file_name])
+                .resp_body_file_path(vec![file_name])
                 .build()
                 .unwrap()
                 .send_request(&RustTypeLoader::default())
@@ -60,7 +60,7 @@ mod tests {
     fn test_load_invalid_content() {
         assert!(matches!(
             MockLoaderRequestBuilder::default()
-                .resp_body_file_path(vec!["rust_type", "Invalid.txt"])
+                .resp_body_file_path(vec!["Invalid.txt"])
                 .build()
                 .unwrap()
                 .send_request(&RustTypeLoader::default())
