@@ -78,6 +78,7 @@ mod tests {
         testing_helpers::{test_data_file_path, MockLoaderRequestBuilder},
         url_helpers::UrlError,
     };
+    use std::sync::Arc;
     use url::Url;
 
     #[test]
@@ -124,5 +125,32 @@ mod tests {
                 .unwrap_err(),
             LoaderError::FetchURLFailed(value) if value.status().map(|value| value.as_u16()) == Some(404)
         ));
+    }
+
+    #[test]
+    fn test_load_valid_url() {
+        assert_eq!(
+            MockLoaderRequestBuilder::default()
+                .resp_body("")
+                .build()
+                .unwrap()
+                .send_request(&TestStringLoader::default())
+                .unwrap(),
+            Arc::new("".to_string())
+        );
+    }
+
+    #[test]
+    fn test_load_valid_url_on_different_fragments() {
+        assert_eq!(
+            MockLoaderRequestBuilder::default().resp_body("").build().unwrap().run_in_mock_context(&|url| {
+                let loader = TestStringLoader::default();
+                let resp = loader.get_or_fetch_with_result(url).unwrap();
+
+                assert_eq!(resp, loader.get_or_fetch_with_result(&url.join("#/a_fragment").unwrap()).unwrap());
+                resp
+            }),
+            Arc::new("".to_string())
+        );
     }
 }
