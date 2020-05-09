@@ -9,7 +9,7 @@ use crate::{
 };
 use json_trait_rs::{get_fragment, JsonType};
 use reqwest::blocking::Client;
-use std::{fmt::Debug, sync::Arc};
+use std::sync::Arc;
 use url::Url;
 
 #[derive(Debug)]
@@ -43,14 +43,15 @@ impl<T: JsonType + Clone> ToOwnedJsonType for T {
     }
 }
 
-default impl<T: JsonType + ToOwnedJsonType + Debug> LoaderTrait<T> for ConcreteJsonLoader<T> {
+default impl<T: JsonType + ToOwnedJsonType> LoaderTrait<T> for ConcreteJsonLoader<T> {
     default fn extract_fragment(&self, fragment: &str, value: Arc<T>) -> Result<Arc<T>, LoaderError> {
         if let Some(fragment) = get_fragment(&*value, fragment) {
             Ok(Arc::new(fragment.to_owned_json_type()))
         } else {
             Err(LoaderError::InvalidURL(UrlError::JsonFragmentError(format!(
-                "Fragment '{}' not found in {:?}",
-                fragment, value
+                "Fragment '{}' not found in {}",
+                fragment,
+                value.to_json_string()
             ))))
         }
     }
