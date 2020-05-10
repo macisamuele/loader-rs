@@ -7,7 +7,9 @@
 [Changelog](./CHANGELOG.md)
 
 ## Rationale
+
 The goal of this repository is to offer a rust interface/trait to load generic types from their URI.
 
 ## Contribution rules
+
 Coming soon
