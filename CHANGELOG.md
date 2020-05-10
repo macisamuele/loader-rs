@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.7.0 (2020-05-10)
+------------------
+
+- Provide dedicated Json loader (`ConcreteJsonLoader`) to allow the loader to deal with Json fragments - [PR #26](https://github.com/macisamuele/loader-rs/pull/26)
+- Export testing helpers, via `testing-helpers`, to provide a structure to easily mock requests for the `LoaderTrait` interactions - [PR #27](https://github.com/macisamuele/loader-rs/pull/27) and [PR #33](https://github.com/macisamuele/loader-rs/pull/33)
+- Improve `RustTypeLoader` implementaton in order to actually parse JSON. - [PR #35](https://github.com/macisamuele/loader-rs/pull/35)
+
+  WARNING: `RustTypeLoader` should be used only for testing as the parsing depends on `serde_json` which might be a dependency that you'd like not to have and is not accurate around `i128` integers.
+- Fix loader cache usage - [PR #36](https://github.com/macisamuele/loader-rs/pull/36)
+
 0.6.0 (2020-04-18)
 ------------------
 
