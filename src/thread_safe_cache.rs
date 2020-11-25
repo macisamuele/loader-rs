@@ -36,7 +36,7 @@ impl<K: Clone + Eq + Hash, V> Default for ThreadSafeCacheImpl<K, V> {
 
 impl<K: Clone + Eq + Hash, V> ThreadSafeCacheTrait<K, V> for ThreadSafeCacheImpl<K, V> {
     fn set(&self, key: &K, value: Arc<V>) {
-        self.0.lock().cache_set(key.clone(), value);
+        let _d = self.0.lock().cache_set(key.clone(), value);
     }
 
     fn get(&self, key: &K) -> Option<Arc<V>> {

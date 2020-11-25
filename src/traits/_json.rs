@@ -1,8 +1,9 @@
 use crate::{
-    json::ConcreteJsonLoader,
+    json::{extract_fragment_json_loader, ConcreteJsonLoader},
     loader::{error::LoaderError, trait_::LoaderTrait},
 };
 use json::{Error, JsonValue};
+use std::sync::Arc;
 
 #[allow(clippy::module_name_repetitions)]
 pub type JsonLoader = ConcreteJsonLoader<JsonValue>;
@@ -15,11 +16,15 @@ impl From<Error> for LoaderError {
 }
 
 impl LoaderTrait<JsonValue> for JsonLoader {
+    fn extract_fragment(&self, fragment: &str, value: Arc<JsonValue>) -> Result<Arc<JsonValue>, LoaderError> {
+        extract_fragment_json_loader(fragment, &value)
+    }
+
     fn load_from_string(&self, content: &str) -> Result<JsonValue, LoaderError>
     where
         Self: Sized,
     {
-        json::parse(content).or_else(|json_error| Err(json_error.into()))
+        json::parse(content).map_err(|json_error| json_error.into())
     }
 
     fn load_from_bytes(&self, content: &[u8]) -> Result<JsonValue, LoaderError>

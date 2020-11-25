@@ -20,7 +20,7 @@ fn validate_builder(value: &MockLoaderRequestBuilder) -> Result<(), String> {
         (None, Some(Some(resp_body_file_path))) => match test_data_file_path(resp_body_file_path) {
             Err(io_error) => Err(io_error.to_string()),
             Ok(absolute_path) if !absolute_path.is_file() => Err(format!("absolute_path={} is not a file", absolute_path.to_str().unwrap())),
-            _ => Ok(()),
+            Ok(_) => Ok(()),
         },
         _ => Ok(()),
     }
@@ -59,7 +59,7 @@ impl MockLoaderRequest {
         let mut mocked_request_builder = mockito::mock(
             &self.http_verb,
             // Remove fragment from http path
-            self.http_path.split('#').collect::<Vec<_>>().first().unwrap().to_string().as_ref(),
+            self.http_path.split('#').collect::<Vec<_>>().first().unwrap().to_string().as_str(),
         )
         .with_status(self.resp_status_code);
 
@@ -159,7 +159,7 @@ mod tests {
             .build()
             .unwrap()
             .run_in_mock_context(&|url| {
-                let _ = TestStringLoader::default().load(url.as_str());
+                let _d = TestStringLoader::default().load(url.as_str());
             });
     }
 

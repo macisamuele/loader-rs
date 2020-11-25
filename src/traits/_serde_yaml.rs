@@ -1,18 +1,23 @@
 use crate::{
-    json::ConcreteJsonLoader,
+    json::{extract_fragment_json_loader, ConcreteJsonLoader},
     loader::{error::LoaderError, trait_::LoaderTrait},
 };
 use serde_yaml::Value;
+use std::sync::Arc;
 
 #[allow(clippy::module_name_repetitions)]
 pub type SerdeYamlLoader = ConcreteJsonLoader<Value>;
 
 impl LoaderTrait<Value> for SerdeYamlLoader {
+    fn extract_fragment(&self, fragment: &str, value: Arc<Value>) -> Result<Arc<Value>, LoaderError> {
+        extract_fragment_json_loader(fragment, &value)
+    }
+
     fn load_from_bytes(&self, content: &[u8]) -> Result<Value, LoaderError>
     where
         Self: Sized,
     {
-        serde_yaml::from_slice(content).or_else(|ref serde_error| Err(LoaderError::from(serde_error)))
+        serde_yaml::from_slice(content).map_err(|serde_error| LoaderError::from(&serde_error))
     }
 }
 

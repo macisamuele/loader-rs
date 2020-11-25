@@ -1,13 +1,18 @@
 use crate::{
-    json::ConcreteJsonLoader,
+    json::{extract_fragment_json_loader, ConcreteJsonLoader},
     loader::{error::LoaderError, trait_::LoaderTrait},
 };
 use json_trait_rs::{RustType, ToRustType};
+use std::sync::Arc;
 
 #[allow(clippy::module_name_repetitions)]
 pub type RustTypeLoader = ConcreteJsonLoader<RustType>;
 
 impl LoaderTrait<RustType> for RustTypeLoader {
+    fn extract_fragment(&self, fragment: &str, value: Arc<RustType>) -> Result<Arc<RustType>, LoaderError> {
+        extract_fragment_json_loader(fragment, &value)
+    }
+
     fn load_from_bytes(&self, content: &[u8]) -> Result<RustType, LoaderError>
     where
         Self: Sized,
@@ -16,7 +21,7 @@ impl LoaderTrait<RustType> for RustTypeLoader {
         // but it's good enough for testing, at least for the time being
         serde_json::from_slice::<serde_json::Value>(content)
             .map(|value| value.to_rust_type())
-            .or_else(|ref serde_error| Err(LoaderError::from(serde_error)))
+            .map_err(|serde_error| LoaderError::from(&serde_error))
     }
 }
 
