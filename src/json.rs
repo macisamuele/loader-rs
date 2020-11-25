@@ -1,7 +1,7 @@
 use crate::{
     loader::{
         error::LoaderError,
-        trait_::{GetCache, GetClient, LoaderTrait},
+        trait_::{GetCache, GetClient},
         Loader,
     },
     thread_safe_cache::ThreadSafeCacheTrait,
@@ -43,16 +43,15 @@ impl<T: JsonType + Clone> ToOwnedJsonType for T {
     }
 }
 
-default impl<T: JsonType + ToOwnedJsonType> LoaderTrait<T> for ConcreteJsonLoader<T> {
-    default fn extract_fragment(&self, fragment: &str, value: Arc<T>) -> Result<Arc<T>, LoaderError> {
-        if let Some(fragment) = get_fragment(&*value, fragment) {
-            Ok(Arc::new(fragment.to_owned_json_type()))
-        } else {
-            Err(LoaderError::InvalidURL(UrlError::JsonFragmentError(format!(
-                "Fragment '{}' not found in {}",
-                fragment,
-                value.to_json_string()
-            ))))
-        }
+#[inline]
+pub(in crate) fn extract_fragment_json_loader<T: ToOwnedJsonType>(fragment: &str, value: &T) -> Result<Arc<T>, LoaderError> {
+    if let Some(fragment) = get_fragment(&*value, fragment) {
+        Ok(Arc::new(fragment.to_owned_json_type()))
+    } else {
+        Err(LoaderError::InvalidURL(UrlError::JsonFragmentError(format!(
+            "Fragment '{}' not found in {}",
+            fragment,
+            value.to_json_string()
+        ))))
     }
 }

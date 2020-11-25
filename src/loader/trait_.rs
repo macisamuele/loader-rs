@@ -55,6 +55,7 @@ pub trait LoaderTrait<T>: Debug + GetClient<T> + GetCache<T> {
             self.save_in_cache(fragmentless_url, &arc_value);
             arc_value
         };
+        #[allow(clippy::option_if_let_else)]
         if let Some(fragment) = key.fragment() {
             self.extract_fragment(fragment, value)
         } else {
