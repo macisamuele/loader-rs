@@ -37,7 +37,7 @@ install-hooks: .git/hooks/pre-commit
 
 # Python Virtual Environment needed to allow usage of pre-commit.com
 venv:
-	python -m virtualenv venv
+	virtualenv venv --python python3
 	venv/bin/pip install --no-cache pre-commit
 
 .PHONY: clean
